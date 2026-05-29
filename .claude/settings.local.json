@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install *)",
+      "Bash(uvicorn main:app --port 8001)",
+      "Bash(curl -s http://localhost:8001/)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('CHECK 1+2:', 'PASS' if d.get\\('status'\\)=='running' else 'FAIL', d\\)\")",
+      "Bash(curl -s http://localhost:8001/v1/formats)",
+      "Bash(python3 -c ' *)"
+    ]
+  }
+}

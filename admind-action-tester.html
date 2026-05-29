@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdMind Action API Tester</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:    #1A1A2E;
+    --amber:   #EF9F27;
+    --green:   #166534;
+    --blue:    #3B82F6;
+    --surface: #F8F8FC;
+    --border:  #E5E7EB;
+    --muted:   #6B7280;
+    --red:     #DC2626;
+    --purple:  #7C3AED;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--surface);
+    color: var(--navy);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Layout ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 280px 1fr 380px;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── Left Column ── */
+  .left-col {
+    background: #fff;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .left-header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .brand {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .brand span.navy { color: var(--navy); }
+  .brand span.amber { color: var(--amber); }
+
+  .subtitle {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .api-status {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 7px 10px;
+    border-radius: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .status-dot.online  { background: #16a34a; box-shadow: 0 0 0 2px #bbf7d0; }
+  .status-dot.offline { background: var(--red); box-shadow: 0 0 0 2px #fee2e2; }
+
+  .format-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .format-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #fff;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    width: 100%;
+  }
+
+  .format-btn:hover { border-color: var(--amber); background: #fffbf2; }
+
+  .format-btn.active {
+    background: var(--navy);
+    border-color: var(--navy);
+    border-left: 3px solid var(--amber);
+    color: #fff;
+  }
+
+  .format-btn .num {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    width: 14px;
+    flex-shrink: 0;
+  }
+
+  .format-btn.active .num { color: #94a3b8; }
+
+  .format-btn .name {
+    font-size: 13px;
+    font-weight: 600;
+    flex: 1;
+    line-height: 1.2;
+  }
+
+  .badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: #f1f5f9;
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .format-btn.active .badge { background: rgba(255,255,255,0.15); color: #cbd5e1; }
+
+  /* ── Middle Column ── */
+  .mid-col {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #fff;
+    border-right: 1px solid var(--border);
+  }
+
+  .mid-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .mid-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .mid-header .hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  .form-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+  }
+
+  .form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .field-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 5px;
+  }
+
+  .field-group input,
+  .field-group textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--navy);
+    background: var(--surface);
+    outline: none;
+    transition: border-color 0.15s;
+    resize: vertical;
+  }
+
+  .field-group input:focus,
+  .field-group textarea:focus {
+    border-color: var(--amber);
+    background: #fff;
+  }
+
+  .field-group textarea { min-height: 70px; }
+
+  .form-footer {
+    padding: 16px 24px 20px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .btn-generate {
+    width: 100%;
+    padding: 13px;
+    background: var(--amber);
+    color: var(--navy);
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-generate:hover { background: #e0911a; }
+  .btn-generate:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .form-footer .hint {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  /* ── Right Column ── */
+  .right-col {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--surface);
+  }
+
+  .right-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .placeholder-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    padding: 40px 24px;
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    margin: 16px;
+  }
+
+  .placeholder-empty .icon { font-size: 32px; margin-bottom: 12px; }
+  .placeholder-empty p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* ── Result Cards ── */
+  .result-card {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+  }
+
+  .card-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .btn-copy {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.1);
+    color: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-copy:hover { background: rgba(255,255,255,0.2); }
+
+  /* Payload card */
+  .payload-card .card-header { background: var(--navy); color: #e2e8f0; }
+  .payload-card .card-label  { color: var(--amber); }
+  .payload-card .card-body   { background: #0f172a; padding: 14px; max-height: 300px; overflow-y: auto; }
+
+  .payload-card pre {
+    font-family: 'DM Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #e2e8f0;
+  }
+
+  .json-key    { color: #93c5fd; }
+  .json-str    { color: #86efac; }
+  .json-num    { color: #fca5a5; }
+  .json-bool   { color: #c084fc; }
+  .json-null   { color: #94a3b8; }
+  .json-punct  { color: #64748b; }
+
+  /* Preview card */
+  .preview-card .card-header { background: #fff; border-bottom: 1px solid var(--border); }
+  .preview-card .card-label  { color: var(--muted); }
+  .preview-card .card-body   { background: #fff; padding: 14px; }
+
+  /* Flutter card */
+  .flutter-card .card-header { background: var(--navy); color: #e2e8f0; }
+  .flutter-card .card-label  { color: #4ade80; }
+  .flutter-card .card-body   { background: #0f172a; padding: 14px; }
+
+  .flutter-card pre {
+    font-family: 'DM Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #e2e8f0;
+  }
+
+  /* Error card */
+  .error-card {
+    border-radius: 10px;
+    border: 1px solid #fecaca;
+    border-left: 4px solid var(--red);
+    background: #fff;
+    padding: 16px;
+  }
+
+  .error-card .err-code {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--red);
+    margin-bottom: 6px;
+  }
+
+  .error-card .err-detail {
+    font-size: 13px;
+    color: var(--navy);
+    line-height: 1.5;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .error-card .err-explain {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+    padding: 10px;
+    background: #fef2f2;
+    border-radius: 6px;
+  }
+
+  /* ── Ad Previews ── */
+
+  /* Format 1 — Inline Text */
+  .preview-f1 {
+    background: #f1f5f9;
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .preview-f1 .ai-bubble {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px 12px 12px 2px;
+    padding: 12px 14px;
+    max-width: 90%;
+    display: inline-block;
+  }
+
+  .preview-f1 .sponsored-pill {
+    display: inline-block;
+    background: var(--amber);
+    color: var(--navy);
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-bottom: 7px;
+    letter-spacing: 0.05em;
+  }
+
+  .preview-f1 .ad-text {
+    font-size: 13px;
+    color: var(--navy);
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+
+  .preview-f1 .cta-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--blue);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  /* Format 2 — Multimodal Card */
+  .preview-f2 {}
+
+  .voice-box {
+    background: #ede9fe;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #5b21b6;
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+
+  .preview-f2 .ad-card {
+    border: 2px solid var(--amber);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .preview-f2 .card-top {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .preview-f2 .sp-label {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--amber);
+    letter-spacing: 0.06em;
+    margin-bottom: 5px;
+  }
+
+  .preview-f2 .card-title { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .preview-f2 .card-sub   { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .preview-f2 .delivery {
+    font-size: 12px;
+    color: var(--green);
+    font-weight: 600;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .preview-f2 .btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 10px 14px;
+  }
+
+  .preview-f2 .btn-primary {
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .preview-f2 .btn-secondary {
+    background: #f1f5f9;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* Format 3 — MCP Transaction */
+  .preview-f3 {}
+
+  .preview-f3 .ad-card {
+    border: 2px solid var(--blue);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .preview-f3 .card-top {
+    padding: 8px 14px;
+    background: #f8fafc;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .preview-f3 .completing {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .preview-f3 .product-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+
+  .preview-f3 .product-img {
+    width: 44px; height: 44px;
+    background: #e2e8f0;
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  .preview-f3 .product-info { flex: 1; }
+  .preview-f3 .product-name { font-size: 13px; font-weight: 700; }
+  .preview-f3 .product-variant { font-size: 11px; color: var(--muted); }
+  .preview-f3 .product-price { font-size: 14px; font-weight: 700; color: var(--navy); }
+
+  .preview-f3 .shipping {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--green);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .preview-f3 .divider { height: 1px; background: var(--border); margin: 0 14px; }
+
+  .preview-f3 .btn-confirm {
+    display: block;
+    width: calc(100% - 28px);
+    margin: 10px 14px;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 11px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    text-align: center;
+  }
+
+  .preview-f3 .cancel-link {
+    display: block;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    padding: 0 14px 12px;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  /* Format 4 — Category Chips */
+  .preview-f4 {
+    background: #f1f5f9;
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .preview-f4 .sec-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .preview-f4 .chips-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .chip.sponsored {
+    border: 1.5px solid var(--amber);
+    background: #fffbf2;
+    color: var(--navy);
+    font-weight: 700;
+  }
+
+  .chip.organic {
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--navy);
+  }
+
+  /* Format 5 — Predictive Push */
+  .preview-f5 {
+    background: var(--navy);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #fff;
+  }
+
+  .preview-f5 .notif-icon {
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .preview-f5 .notif-body { flex: 1; min-width: 0; }
+  .preview-f5 .notif-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+  .preview-f5 .notif-text  { font-size: 11px; opacity: 0.7; line-height: 1.4; margin-bottom: 4px; }
+  .preview-f5 .notif-deadline { font-size: 11px; color: var(--amber); font-weight: 600; }
+
+  .preview-f5 .notif-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .preview-f5 .btn-cta-pill {
+    background: #fff;
+    color: var(--navy);
+    border: none;
+    border-radius: 14px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+  }
+
+  .preview-f5 .close-x {
+    font-size: 14px;
+    opacity: 0.4;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  /* Format 6 — MCP Tool Chip */
+  .preview-f6 {}
+
+  .preview-f6 .ctx-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .preview-f6 .chips-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .preview-f6 .mcp-explain {
+    font-size: 11px;
+    color: var(--muted);
+    background: #f8fafc;
+    padding: 8px 10px;
+    border-radius: 6px;
+    line-height: 1.5;
+  }
+
+  /* Format 7 — Teaser Hook */
+  .preview-f7 {}
+
+  .preview-f7 .ai-bubble {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px 12px 12px 2px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--navy);
+    display: inline-block;
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+
+  .preview-f7 .replies-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .preview-f7 .reply-chip {
+    padding: 6px 12px;
+    border: 1.5px solid var(--navy);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--navy);
+    background: #fff;
+  }
+
+  .preview-f7 .explain-lines {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ── LEFT COLUMN ── -->
+  <div class="left-col">
+    <div class="left-header">
+      <div class="brand">
+        <span class="navy">AdMind.</span><span class="amber"> Action API</span>
+      </div>
+      <div class="subtitle">Fill in the fields → get the final payload</div>
+      <div class="api-status" id="apiStatus">
+        <div class="status-dot offline" id="statusDot"></div>
+        <span id="statusText">Checking API…</span>
+      </div>
+    </div>
+    <div class="format-list" id="formatList"></div>
+  </div>
+
+  <!-- ── MIDDLE COLUMN ── -->
+  <div class="mid-col">
+    <div class="mid-header">
+      <h2 id="midTitle">Inline Text Ad</h2>
+      <div class="hint">Fill in all fields then click Generate Payload</div>
+    </div>
+    <div class="form-scroll">
+      <div class="form-grid" id="formGrid"></div>
+    </div>
+    <div class="form-footer">
+      <button class="btn-generate" id="btnGenerate" onclick="generatePayload()">
+        Generate Payload →
+      </button>
+      <div class="hint">This calls POST /v1/action on your local API</div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT COLUMN ── -->
+  <div class="right-col">
+    <div class="right-scroll" id="rightScroll">
+      <div class="placeholder-empty" id="placeholderEmpty">
+        <div class="icon">📦</div>
+        <p>Fill in the fields on the left and click<br><strong>Generate Payload</strong> to see the result here.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API = 'http://localhost:8080';
+
+// ── Format metadata ──────────────────────────────────────────────────────────
+const FORMAT_ORDER = [
+  'inline_text',
+  'text_voice_card',
+  'mcp_transaction_card',
+  'post_conv_chip',
+  'predictive_push',
+  'mcp_tool_chip',
+  'teaser_hook',
+];
+
+const BILLING = {
+  inline_text:         'CPC',
+  text_voice_card:     'CPC/CPT',
+  mcp_transaction_card:'CPA',
+  post_conv_chip:      'CPC',
+  predictive_push:     'CPM+CPC',
+  mcp_tool_chip:       'CPT',
+  teaser_hook:         'CPT+CPC',
+};
+
+// ── Demo values ───────────────────────────────────────────────────────────────
+const DEMO = {
+  inline_text: {
+    app_name:        'VIP Luggage',
+    sponsored_label: 'SPONSORED · VIP LUGGAGE',
+    ad_text:         "VIP's 78cm hardcase is ₹3,499 with free 48h delivery and 10% MMT cashback.",
+    cta_label:       'Shop VIP Luggage',
+    cta_url:         'https://vip.in/mmt?ref=inline',
+  },
+  text_voice_card: {
+    app_name:          'MakeMyTrip',
+    sponsored_label:   'SPONSORED · MMT',
+    voice_brief:       'Family of 5 just booked flights — mention luggage set. One sentence.',
+    put_forth:         '₹5,999 duo set, free delivery before departure, 10% MMT cashback',
+    at_no_time:        'cheapest, best in India',
+    card_title:        'VIP Skybags Pro — Family Set',
+    card_subtitle:     '78cm + 68cm hardcase · ₹5,999',
+    delivery_line:     'Free delivery before departure',
+    cta_primary_label: 'Shop now',
+    cta_primary_url:   'https://vip.in/mmt?ref=card',
+    cta_secondary_label: 'Dismiss',
+  },
+  mcp_transaction_card: {
+    app_name:        'Amazon',
+    sponsored_label: 'SPONSORED · AMAZON',
+    voice_brief:     'User wants headphones — mention Sony WH-1000XM5. Ask if they want to order.',
+    put_forth:       '₹24,990, Prime delivery tomorrow',
+    at_no_time:      'cheapest, best ever',
+    card_title:      'Sony WH-1000XM5',
+    card_variant:    'Midnight Black',
+    card_price:      '₹24,990',
+    delivery_label:  'Arriving tomorrow by 8 PM',
+    cta_label:       'Confirm & Pay ₹24,990',
+    mcp_endpoint:    'https://api.amazon.in/mcp',
+    mcp_tool:        'place_order',
+    product_sku:     'SONY-WH1000XM5-BLK',
+    quantity:        '1',
+    latency_sla_ms:  '800',
+  },
+  post_conv_chip: {
+    app_name:        'Nykaa',
+    sponsored_label: 'SPONSORED · NYKAA',
+    section_label:   'Before you go — essentials',
+    chip_label:      'Skincare — Nykaa',
+    chip_icon:       'health',
+    cta_url:         'https://nykaa.com?ref=admind',
+    slot_position:   '0',
+  },
+  predictive_push: {
+    app_name:        'PhonePe',
+    sponsored_label: 'SPONSORED · PHONEPE',
+    title:           'Trip coming up?',
+    body:            'Get travel insurance for ₹199 — covers cancellation and baggage loss.',
+    cta_label:       'View deal',
+    cta_url:         'https://phonepe.com/insurance?ref=admind',
+    deadline_label:  'Offer valid until departure',
+    trigger_reason:  'days_before_departure:6',
+  },
+  mcp_tool_chip: {
+    app_name:        'Airbnb',
+    sponsored_label: 'SPONSORED · AIRBNB',
+    chip_label:      'Check Airbnb for my dates',
+    chip_icon:       'hotel',
+    mcp_endpoint:    'https://api.airbnb.com/mcp',
+    mcp_tool:        'check_availability',
+    context_params:  'travel_dates, destination_city',
+  },
+  teaser_hook: {
+    app_name:         'Zomato',
+    teaser_question:  'Got dinner sorted for tonight?',
+    quick_replies:    'Yes sorted, Not yet, Just browsing',
+  },
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let formatsData = {};
+let selectedFormat = 'inline_text';
+let lastPayload = null;
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function splitCSV(str) {
+  return String(str).split(',').map(s => s.trim()).filter(Boolean);
+}
+
+// ── JSON syntax highlighting ──────────────────────────────────────────────────
+function highlightJSON(obj) {
+  const json = JSON.stringify(obj, null, 2);
+  return json
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+      if (/^"/.test(m)) {
+        if (/:$/.test(m)) return `<span class="json-key">${m}</span>`;
+        return `<span class="json-str">${m}</span>`;
+      }
+      if (/true|false/.test(m)) return `<span class="json-bool">${m}</span>`;
+      if (/null/.test(m)) return `<span class="json-null">${m}</span>`;
+      return `<span class="json-num">${m}</span>`;
+    });
+}
+
+// ── API Status ────────────────────────────────────────────────────────────────
+async function checkAPI() {
+  try {
+    const r = await fetch(`${API}/`, { signal: AbortSignal.timeout(2000) });
+    const ok = r.ok;
+    document.getElementById('statusDot').className = `status-dot ${ok ? 'online' : 'offline'}`;
+    document.getElementById('statusText').textContent = ok ? 'API Online' : 'API Error';
+  } catch {
+    document.getElementById('statusDot').className = 'status-dot offline';
+    document.getElementById('statusText').textContent = 'Start API first';
+  }
+}
+
+// ── Build format buttons ──────────────────────────────────────────────────────
+function buildFormatList() {
+  const list = document.getElementById('formatList');
+  list.innerHTML = '';
+  FORMAT_ORDER.forEach((key, i) => {
+    const meta = formatsData[key] || {};
+    const btn = document.createElement('button');
+    btn.className = `format-btn${key === selectedFormat ? ' active' : ''}`;
+    btn.dataset.fmt = key;
+    btn.innerHTML = `
+      <span class="num">${i + 1}</span>
+      <span class="name">${meta.display_name || key}</span>
+      <span class="badge">${BILLING[key]}</span>`;
+    btn.onclick = () => selectFormat(key);
+    list.appendChild(btn);
+  });
+}
+
+// ── Select format ─────────────────────────────────────────────────────────────
+function selectFormat(fmt) {
+  selectedFormat = fmt;
+  buildFormatList();
+  buildForm(fmt);
+  document.getElementById('midTitle').textContent =
+    (formatsData[fmt] || {}).display_name || fmt;
+}
+
+// ── Build form ────────────────────────────────────────────────────────────────
+function buildForm(fmt) {
+  const fields = (formatsData[fmt] || {}).required_fields || [];
+  const demo   = DEMO[fmt] || {};
+  const grid   = document.getElementById('formGrid');
+  grid.innerHTML = '';
+
+  fields.forEach(f => {
+    const val = demo[f.key] ?? '';
+    const div = document.createElement('div');
+    div.className = 'field-group';
+    if (f.type === 'textarea') {
+      div.innerHTML = `
+        <label for="f_${f.key}">${esc(f.label)}</label>
+        <textarea id="f_${f.key}" placeholder="${esc(f.placeholder)}">${esc(val)}</textarea>`;
+    } else {
+      div.innerHTML = `
+        <label for="f_${f.key}">${esc(f.label)}</label>
+        <input type="${f.type === 'number' ? 'number' : 'text'}" id="f_${f.key}"
+          placeholder="${esc(f.placeholder)}" value="${esc(val)}">`;
+    }
+    grid.appendChild(div);
+  });
+}
+
+// ── Generate payload ──────────────────────────────────────────────────────────
+async function generatePayload() {
+  const btn = document.getElementById('btnGenerate');
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+
+  const fields = (formatsData[selectedFormat] || {}).required_fields || [];
+  const inputs = {};
+  fields.forEach(f => {
+    const el = document.getElementById(`f_${f.key}`);
+    inputs[f.key] = el ? el.value : '';
+  });
+
+  try {
+    const res = await fetch(`${API}/v1/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ format: selectedFormat, inputs }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      showError(res.status, data);
+    } else {
+      lastPayload = data;
+      showResult(data);
+    }
+  } catch (err) {
+    showNetworkError(err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Generate Payload →';
+  }
+}
+
+// ── Show result ───────────────────────────────────────────────────────────────
+function showResult(payload) {
+  const scroll = document.getElementById('rightScroll');
+  scroll.innerHTML = '';
+
+  // Card 1 — Final Payload
+  const payloadJSON = highlightJSON(payload);
+  const c1 = document.createElement('div');
+  c1.className = 'result-card payload-card';
+  c1.innerHTML = `
+    <div class="card-header">
+      <span class="card-label">Final Payload</span>
+      <button class="btn-copy" onclick="copyText(this, ${esc(JSON.stringify(JSON.stringify(payload, null, 2)))})">Copy</button>
+    </div>
+    <div class="card-body"><pre>${payloadJSON}</pre></div>`;
+  scroll.appendChild(c1);
+
+  // Card 2 — Ad Preview
+  const c2 = document.createElement('div');
+  c2.className = 'result-card preview-card';
+  c2.innerHTML = `
+    <div class="card-header">
+      <span class="card-label" style="color:var(--muted)">Ad Preview</span>
+    </div>
+    <div class="card-body">${buildPreview(payload)}</div>`;
+  scroll.appendChild(c2);
+
+  // Card 3 — Flutter Integration
+  const snippet = buildFlutter(payload);
+  const c3 = document.createElement('div');
+  c3.className = 'result-card flutter-card';
+  c3.innerHTML = `
+    <div class="card-header">
+      <span class="card-label">Flutter Integration</span>
+      <button class="btn-copy" onclick="copyText(this, ${esc(JSON.stringify(snippet))})">Copy</button>
+    </div>
+    <div class="card-body"><pre>${esc(snippet)}</pre></div>`;
+  scroll.appendChild(c3);
+}
+
+// ── Copy helper ───────────────────────────────────────────────────────────────
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+
+// ── Error display ─────────────────────────────────────────────────────────────
+function showError(status, data) {
+  const scroll = document.getElementById('rightScroll');
+  scroll.innerHTML = '';
+  const detail = data.detail || data;
+  let code = `HTTP ${status}`;
+  let msg  = '';
+  let explain = '';
+
+  if (detail && detail.error === 'Unknown format') {
+    code    = 'ADMIND_001: Unknown Format';
+    msg     = `Format "${(data.detail || {}).format || ''}" is not recognised.`;
+    explain = `Valid formats are: ${((detail.valid_formats) || []).join(', ')}.`;
+  } else if (detail && detail.error === 'Missing fields') {
+    code    = 'ADMIND_002: Missing Fields';
+    const missing = (detail.missing || []);
+    msg     = `${missing.length} required field${missing.length !== 1 ? 's' : ''} missing.`;
+    explain = missing.map(f => `The field '${f}' is required for the ${selectedFormat} format but was not provided.`).join('\n');
+  } else {
+    msg     = JSON.stringify(detail, null, 2);
+    explain = `HTTP ${status} error from the API.`;
+  }
+
+  const div = document.createElement('div');
+  div.className = 'error-card';
+  div.innerHTML = `
+    <div class="err-code">${esc(code)}</div>
+    <div class="err-detail">${esc(msg)}</div>
+    <div class="err-explain" style="white-space:pre-wrap">${esc(explain)}</div>`;
+  scroll.appendChild(div);
+}
+
+function showNetworkError(err) {
+  const scroll = document.getElementById('rightScroll');
+  scroll.innerHTML = '';
+  const div = document.createElement('div');
+  div.className = 'error-card';
+  div.innerHTML = `
+    <div class="err-code">NETWORK ERROR</div>
+    <div class="err-detail">Cannot reach API</div>
+    <div class="err-explain">Make sure you have run:\nuvicorn main:app --reload --port 8001\n\n${esc(String(err))}</div>`;
+  scroll.appendChild(div);
+}
+
+// ── Ad Previews ───────────────────────────────────────────────────────────────
+function buildPreview(p) {
+  const fmt = p?.format;
+  const s   = p?.serve || {};
+  const a   = p?.action || {};
+
+  switch (fmt) {
+
+    case 'inline_text': return `
+      <div class="preview-f1">
+        <div class="ai-bubble">
+          <div class="sponsored-pill">SPONSORED</div>
+          <div class="ad-text">${esc(s.text || '')}</div>
+          <span class="cta-link">${esc(s.cta_label || '')}</span>
+        </div>
+      </div>`;
+
+    case 'text_voice_card': {
+      const card = s.card || {};
+      return `
+        <div class="preview-f2">
+          <div class="voice-box">🎙️ Voice brief: ${esc(s.voice_brief || '')}</div>
+          <div class="ad-card">
+            <div class="card-top">
+              <div class="sp-label">${esc(s.sponsored_label || '')}</div>
+              <div class="card-title">${esc(card.title || '')}</div>
+              <div class="card-sub">${esc(card.subtitle || '')}</div>
+            </div>
+            <div class="delivery">✅ ${esc(card.delivery_line || '')}</div>
+            <div class="btn-row">
+              <button class="btn-primary">${esc(card.cta_primary_label || '')}</button>
+              <button class="btn-secondary">${esc(card.cta_secondary_label || '')}</button>
+            </div>
+          </div>
+        </div>`;}
+
+    case 'mcp_transaction_card': {
+      const card = s.card || {};
+      return `
+        <div class="preview-f3">
+          <div class="voice-box" style="margin-bottom:10px">🎙️ ${esc(s.voice_brief || '')}</div>
+          <div class="ad-card">
+            <div class="card-top">
+              <div class="completing">Completing your order</div>
+            </div>
+            <div class="product-row">
+              <div class="product-img">📦</div>
+              <div class="product-info">
+                <div class="product-name">${esc(card.title || '')}</div>
+                <div class="product-variant">${esc(card.variant || '')}</div>
+              </div>
+              <div class="product-price">${esc(card.price || '')}</div>
+            </div>
+            <div class="shipping">✅ ${esc(card.delivery_label || '')}</div>
+            <div class="divider"></div>
+            <button class="btn-confirm">${esc(card.cta_label || '')}</button>
+            <span class="cancel-link">Cancel</span>
+          </div>
+        </div>`;}
+
+    case 'post_conv_chip': {
+      const chip = s.sponsored_chip || {};
+      return `
+        <div class="preview-f4">
+          <div class="sec-label">${esc(s.section_label || '')}</div>
+          <div class="chips-row">
+            <span class="chip sponsored">⭐ ${esc(chip.label || '')}</span>
+            <span class="chip organic">🕶️ Sunscreen</span>
+            <span class="chip organic">👗 Clothes</span>
+            <span class="chip organic">🔌 Gear</span>
+          </div>
+        </div>`;}
+
+    case 'predictive_push': return `
+      <div class="preview-f5">
+        <div class="notif-icon">🔔</div>
+        <div class="notif-body">
+          <div class="notif-title">${esc(s.title || '')}</div>
+          <div class="notif-text">${esc(s.body || '')}</div>
+          <div class="notif-deadline">${esc(s.deadline_label || '')}</div>
+        </div>
+        <div class="notif-right">
+          <button class="btn-cta-pill">${esc(s.cta_label || '')}</button>
+          <span class="close-x">✕</span>
+        </div>
+      </div>`;
+
+    case 'mcp_tool_chip': {
+      const mcp = a.mcp_tool || '';
+      const ep  = a.advertiser_mcp || '';
+      return `
+        <div class="preview-f6">
+          <div class="ctx-label">Appears alongside publisher's native chips:</div>
+          <div class="chips-row">
+            <span class="chip organic">🏨 Find hotels</span>
+            <span class="chip organic">🗺️ Plan itinerary</span>
+            <span class="chip" style="background:#fff;border:1.5px solid var(--navy);box-shadow:0 2px 6px rgba(0,0,0,.08)">${esc(s.chip_label || '')}</span>
+          </div>
+          <div class="mcp-explain">User taps → calls <strong>${esc(mcp)}</strong> on <strong>${esc(ep)}</strong></div>
+        </div>`;}
+
+    case 'teaser_hook': {
+      const replies = Array.isArray(s.quick_replies) ? s.quick_replies : [];
+      const chipsHTML = replies.map(r => `<span class="reply-chip">${esc(r)}</span>`).join('');
+      const first = replies[0] || 'Yes';
+      return `
+        <div class="preview-f7">
+          <div class="ai-bubble">${esc(s.teaser_question || '')}</div>
+          <div class="replies-row">${chipsHTML}</div>
+          <div class="explain-lines">
+            → "<em>${esc(first)}</em>" — ad skipped (skip_if_positive: true)<br>
+            → Any other reply — full ad card fires in Turn 2
+          </div>
+        </div>`;}
+
+    default: return `<p style="color:var(--muted);font-size:13px">No preview for format: ${esc(fmt)}</p>`;
+  }
+}
+
+// ── Flutter snippets ──────────────────────────────────────────────────────────
+function buildFlutter(p) {
+  const fmt = p?.format;
+  const s   = p?.serve || {};
+  const a   = p?.action || {};
+
+  switch (fmt) {
+    case 'inline_text':
+      return `// Render below your last AI message\nInlineTextAdWidget(payload: AdMindPayload.fromJson(ad))`;
+
+    case 'text_voice_card':
+      return `// Speak voice brief first, then render\nawait tts.speak(ad['serve']['voice_brief']);\nMultimodalCardWidget(\n  payload: AdMindPayload.fromJson(ad),\n  onDismiss: () => setState(() => _ad = null),\n)`;
+
+    case 'mcp_transaction_card':
+      return `MCPTransactionCardWidget(\n  payload: AdMindPayload.fromJson(ad),\n  onConfirm: (p) async => await mcp.placeOrder(p),\n  onDismiss: () => setState(() => _ad = null),\n)`;
+
+    case 'post_conv_chip':
+      return `PostConvChipsWidget(\n  payload: AdMindPayload.fromJson(ad),\n  organicChips: [\n    OrganicChip(label: 'Sunscreen', icon: 'health'),\n    OrganicChip(label: 'Clothes', icon: 'clothes'),\n  ],\n)`;
+
+    case 'predictive_push':
+      return `PredictivePushBannerWidget(\n  payload: AdMindPayload.fromJson(ad),\n  onDismiss: () => setState(() => _ad = null),\n)`;
+
+    case 'mcp_tool_chip':
+      return `MCPToolChipWidget(\n  payload: AdMindPayload.fromJson(ad),\n  onToolCall: (p) async => await mcp.callTool(p),\n)`;
+
+    case 'teaser_hook':
+      return `TeaserAdWidget(\n  payload: AdMindPayload.fromJson(ad),\n  onDismiss: () => setState(() => _ad = null),\n)`;
+
+    default:
+      return `// Unknown format: ${fmt}`;
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  checkAPI();
+  setInterval(checkAPI, 5000);
+
+  try {
+    const res = await fetch(`${API}/v1/formats`);
+    if (res.ok) {
+      const data = await res.json();
+      formatsData = data.formats || {};
+    }
+  } catch {}
+
+  // Fallback: build from hardcoded if API unreachable
+  if (!Object.keys(formatsData).length) {
+    formatsData = {
+      inline_text:          { display_name: 'Inline Text Ad',       required_fields: [{key:'app_name',label:'App / Brand Name',type:'text',placeholder:'e.g. VIP Luggage'},{key:'sponsored_label',label:'Sponsored Label',type:'text',placeholder:'e.g. SPONSORED · VIP LUGGAGE'},{key:'ad_text',label:'Ad Text',type:'textarea',placeholder:'The exact sentence shown inline'},{key:'cta_label',label:'CTA Button Label',type:'text',placeholder:'e.g. Shop now'},{key:'cta_url',label:'CTA URL',type:'text',placeholder:'https://...'}] },
+      text_voice_card:      { display_name: 'Multimodal Card',      required_fields: [{key:'app_name',label:'App / Brand Name',type:'text',placeholder:'e.g. MakeMyTrip'},{key:'sponsored_label',label:'Sponsored Label',type:'text',placeholder:'e.g. SPONSORED · MMT'},{key:'voice_brief',label:'Voice Brief',type:'textarea',placeholder:'One sentence'},{key:'put_forth',label:'Put Forth (comma-separated)',type:'text',placeholder:'e.g. ₹5,999 duo set'},{key:'at_no_time',label:'At No Time (comma-separated)',type:'text',placeholder:'e.g. cheapest'},{key:'card_title',label:'Card Title',type:'text',placeholder:'e.g. VIP Skybags Pro'},{key:'card_subtitle',label:'Card Subtitle',type:'text',placeholder:''},{key:'delivery_line',label:'Delivery Line',type:'text',placeholder:''},{key:'cta_primary_label',label:'Primary CTA Label',type:'text',placeholder:'e.g. Shop now'},{key:'cta_primary_url',label:'Primary CTA URL',type:'text',placeholder:'https://...'},{key:'cta_secondary_label',label:'Secondary CTA Label',type:'text',placeholder:'e.g. Dismiss'}] },
+      mcp_transaction_card: { display_name: 'MCP Transaction Card', required_fields: [{key:'app_name',label:'App / Brand Name',type:'text',placeholder:'e.g. Amazon'},{key:'sponsored_label',label:'Sponsored Label',type:'text',placeholder:''},{key:'voice_brief',label:'Voice Brief',type:'textarea',placeholder:''},{key:'put_forth',label:'Put Forth (comma-separated)',type:'text',placeholder:''},{key:'at_no_time',label:'At No Time (comma-separated)',type:'text',placeholder:''},{key:'card_title',label:'Product Name',type:'text',placeholder:''},{key:'card_variant',label:'Variant',type:'text',placeholder:''},{key:'card_price',label:'Price',type:'text',placeholder:''},{key:'delivery_label',label:'Delivery Label',type:'text',placeholder:''},{key:'cta_label',label:'Confirm Button Label',type:'text',placeholder:''},{key:'mcp_endpoint',label:'MCP Endpoint URL',type:'text',placeholder:''},{key:'mcp_tool',label:'MCP Tool Name',type:'text',placeholder:''},{key:'product_sku',label:'Product SKU',type:'text',placeholder:''},{key:'quantity',label:'Quantity',type:'number',placeholder:'1'},{key:'latency_sla_ms',label:'Latency SLA (ms)',type:'number',placeholder:'800'}] },
+      post_conv_chip:       { display_name: 'Category Chips',       required_fields: [{key:'app_name',label:'App / Brand Name',type:'text',placeholder:''},{key:'sponsored_label',label:'Sponsored Label',type:'text',placeholder:''},{key:'section_label',label:'Section Label',type:'text',placeholder:''},{key:'chip_label',label:'Chip Label',type:'text',placeholder:''},{key:'chip_icon',label:'Chip Icon',type:'text',placeholder:''},{key:'cta_url',label:'CTA URL',type:'text',placeholder:''},{key:'slot_position',label:'Slot Position',type:'number',placeholder:'0'}] },
+      predictive_push:      { display_name: 'Predictive Push',      required_fields: [{key:'app_name',label:'App / Brand Name',type:'text',placeholder:''},{key:'sponsored_label',label:'Sponsored Label',type:'text',placeholder:''},{key:'title',label:'Notification Title',type:'text',placeholder:''},{key:'body',label:'Notification Body',type:'textarea',placeholder:''},{key:'cta_label',label:'CTA Label',type:'text',placeholder:''},{key:'cta_url',label:'CTA URL',type:'text',placeholder:''},{key:'deadline_label',label:'Deadline Label',type:'text',placeholder:''},{key:'trigger_reason',label:'Trigger Reason',type:'text',placeholder:''}] },
+      mcp_tool_chip:        { display_name: 'MCP Tool Chip',        required_fields: [{key:'app_name',label:'App / Brand Name',type:'text',placeholder:''},{key:'sponsored_label',label:'Sponsored Label',type:'text',placeholder:''},{key:'chip_label',label:'Chip Label',type:'text',placeholder:''},{key:'chip_icon',label:'Chip Icon',type:'text',placeholder:''},{key:'mcp_endpoint',label:'MCP Endpoint URL',type:'text',placeholder:''},{key:'mcp_tool',label:'MCP Tool Name',type:'text',placeholder:''},{key:'context_params',label:'Context Params (comma-separated)',type:'text',placeholder:''}] },
+      teaser_hook:          { display_name: 'Teaser Hook',          required_fields: [{key:'app_name',label:'App / Brand Name',type:'text',placeholder:''},{key:'teaser_question',label:'Teaser Question',type:'text',placeholder:''},{key:'quick_replies',label:'Quick Replies (comma-separated)',type:'text',placeholder:''}] },
+    };
+  }
+
+  buildFormatList();
+  selectFormat('inline_text');
+}
+
+init();
+</script>
+</body>
+</html>
