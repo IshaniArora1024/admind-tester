@@ -1,0 +1,39 @@
+{
+  "campaign_id": "sunscreen_001",
+  "advertiser": "Neutrogena",
+  "active": false,
+  "category": "skincare",
+  "note": "This campaign is inactive — example only. Set active:true to enable.",
+  "target_intents": ["skincare_needed", "trip_planning", "conversation_ended"],
+  "formats": {
+    "inline_text": {
+      "enabled": true,
+      "trigger_intents": ["skincare_needed"],
+      "serve": {
+        "text": "Heading to a beach destination? Neutrogena SPF 50 is ₹399 with free delivery.",
+        "cta_label": "Shop Neutrogena",
+        "cta_url": "https://neutrogena.in?ref=admind"
+      },
+      "guard": {
+        "frequency_cap_session": 1,
+        "label": "Sponsored"
+      }
+    },
+    "post_conv_chip": {
+      "enabled": true,
+      "trigger_intents": ["conversation_ended"],
+      "serve": {
+        "section_label": "Before you go — essentials",
+        "sponsored_chip": {
+          "label": "Sunscreen — Neutrogena",
+          "icon": "health",
+          "cta_url": "https://neutrogena.in?ref=chip",
+          "slot_position": 1
+        }
+      },
+      "guard": {
+        "frequency_cap_session": 1
+      }
+    }
+  }
+}

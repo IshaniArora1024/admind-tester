@@ -1,0 +1,26 @@
+{
+  "campaign_id": "food_001",
+  "advertiser": "Swiggy",
+  "active": false,
+  "category": "food",
+  "note": "Inactive — example only.",
+  "target_intents": ["food_ordering"],
+  "formats": {
+    "mcp_tool_chip": {
+      "enabled": true,
+      "trigger_intents": ["food_ordering"],
+      "serve": {
+        "chip_label": "Order food for the journey",
+        "chip_icon": "food"
+      },
+      "action": {
+        "advertiser_mcp": "https://api.swiggy.com/mcp",
+        "mcp_tool": "browse_restaurants",
+        "mcp_params_from_context": ["location", "cuisine_preference"]
+      },
+      "guard": {
+        "frequency_cap_session": 2
+      }
+    }
+  }
+}

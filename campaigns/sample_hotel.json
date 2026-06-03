@@ -1,0 +1,29 @@
+{
+  "campaign_id": "hotel_001",
+  "advertiser": "OYO Rooms",
+  "active": false,
+  "category": "hotels",
+  "note": "Inactive — example only.",
+  "target_intents": ["hotel_needed", "trip_planning"],
+  "formats": {
+    "text_voice_card": {
+      "enabled": true,
+      "trigger_intents": ["hotel_needed"],
+      "serve": {
+        "voice_brief": "User needs hotel — mention OYO naturally.",
+        "card": {
+          "title": "OYO Rooms — Goa",
+          "subtitle": "From ₹799/night · Free cancellation",
+          "delivery_line": "Instant confirmation",
+          "cta_primary_label": "Check availability",
+          "cta_primary_url": "https://oyorooms.com?ref=admind",
+          "cta_secondary_label": "Dismiss"
+        }
+      },
+      "guard": {
+        "frequency_cap_session": 1,
+        "do_not_repeat": true
+      }
+    }
+  }
+}

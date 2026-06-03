@@ -1,0 +1,152 @@
+{
+  "campaign_id": "vip_001",
+  "advertiser": "VIP Luggage",
+  "active": true,
+  "category": "luggage",
+  "target_intents": [
+    "luggage_needed",
+    "flight_booked",
+    "trip_planning",
+    "packing_discussion",
+    "purchase_intent",
+    "conversation_ended"
+  ],
+  "formats": {
+    "inline_text": {
+      "enabled": true,
+      "trigger_intents": ["luggage_needed", "packing_discussion"],
+      "serve": {
+        "text": "For a 7-night trip with 5 people, VIP's 78cm hardcase is ₹3,499 with free 48h delivery and 10% MMT cashback.",
+        "cta_label": "Shop VIP Luggage",
+        "cta_url": "https://vip.in/mmt?ref=inline"
+      },
+      "guard": {
+        "frequency_cap_session": 1,
+        "label": "Sponsored"
+      }
+    },
+    "text_voice_card": {
+      "enabled": true,
+      "trigger_intents": ["flight_booked", "trip_planning"],
+      "serve": {
+        "voice_brief": "Family travelling — mention VIP luggage set post-booking. One sentence. Conversational.",
+        "put_forth": ["₹5,999 duo set", "free delivery before departure", "10% MMT cashback"],
+        "at_no_time": ["cheapest", "best in India"],
+        "card": {
+          "title": "VIP Skybags Pro — Family Set",
+          "subtitle": "78cm + 68cm hardcase · ₹5,999",
+          "delivery_line": "Free delivery before departure",
+          "cta_primary_label": "Shop now",
+          "cta_primary_url": "https://vip.in/mmt?ref=card",
+          "cta_secondary_label": "Dismiss"
+        }
+      },
+      "guard": {
+        "frequency_cap_session": 1,
+        "do_not_repeat": true
+      }
+    },
+    "mcp_transaction_card": {
+      "enabled": true,
+      "trigger_intents": ["purchase_intent", "flight_booked"],
+      "serve": {
+        "voice_brief": "Mention VIP luggage, ask if user wants to order. One sentence.",
+        "put_forth": ["₹3,499", "free delivery before flight"],
+        "at_no_time": ["cheapest", "best in India"],
+        "card": {
+          "title": "VIP Skybags Pro 78cm",
+          "variant": "Navy",
+          "price": "₹3,499",
+          "delivery_label": "Arriving before your flight",
+          "cta_label": "Confirm & Pay ₹3,499"
+        }
+      },
+      "action": {
+        "advertiser_mcp": "https://api.vip.in/mcp",
+        "mcp_tool": "place_order",
+        "mcp_params": {
+          "product_sku": "VIP-SKB-78-NVY",
+          "quantity": 1
+        }
+      },
+      "guard": {
+        "frequency_cap_session": 1,
+        "do_not_repeat": true,
+        "latency_sla_ms": 800
+      }
+    },
+    "post_conv_chip": {
+      "enabled": true,
+      "trigger_intents": ["conversation_ended"],
+      "serve": {
+        "section_label": "Before you go — essentials",
+        "sponsored_chip": {
+          "label": "Luggage — VIP",
+          "icon": "luggage",
+          "cta_url": "https://vip.in/mmt?ref=chip",
+          "slot_position": 0
+        }
+      },
+      "guard": {
+        "frequency_cap_session": 1
+      }
+    },
+    "predictive_push": {
+      "enabled": true,
+      "trigger_intents": ["flight_booked", "trip_planning"],
+      "trigger_condition": "days_before_departure <= 8",
+      "serve": {
+        "title": "Packing time?",
+        "body": "VIP's family set is ₹5,999 — free delivery before your flight. 10% MMT cashback.",
+        "cta_label": "View deal",
+        "cta_url": "https://vip.in/mmt?ref=pred_push",
+        "deadline_label": "Last delivery date: 3 days before departure"
+      },
+      "guard": {
+        "frequency_cap_per_trip": 1
+      }
+    },
+    "mcp_tool_chip": {
+      "enabled": true,
+      "trigger_intents": ["trip_planning", "flight_booked"],
+      "serve": {
+        "chip_label": "Check VIP Luggage for my dates",
+        "chip_icon": "luggage"
+      },
+      "action": {
+        "advertiser_mcp": "https://api.vip.in/mcp",
+        "mcp_tool": "check_availability",
+        "mcp_params_from_context": ["travel_dates", "destination_city"]
+      },
+      "guard": {
+        "frequency_cap_session": 2
+      }
+    },
+    "teaser_hook": {
+      "enabled": true,
+      "trigger_intents": ["trip_planning", "flight_booked", "luggage_needed"],
+      "serve": {
+        "teaser_question": "Got luggage sorted for your flight?",
+        "quick_replies": ["Yes, sorted", "Not yet", "Just browsing"],
+        "on_negative_response": {
+          "voice_brief": "Mention VIP luggage. Don't be pushy.",
+          "put_forth": ["₹3,499", "free delivery in 48h"],
+          "at_no_time": ["cheapest", "best in India"],
+          "card": {
+            "title": "VIP Skybags Pro 78cm",
+            "subtitle": "₹3,499 · Free delivery in 48h",
+            "delivery_line": "Arrives before your flight",
+            "cta_primary_label": "Check it out",
+            "cta_primary_url": "https://vip.in/mmt?ref=teaser",
+            "cta_secondary_label": "No thanks"
+          }
+        },
+        "on_positive_response": "skip_ad"
+      },
+      "guard": {
+        "frequency_cap_session": 1,
+        "skip_if_positive": true
+      }
+    }
+  }
+}

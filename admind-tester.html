@@ -1,0 +1,1859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdMind API Tester</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #1A1A2E;
+  --amber: #EF9F27;
+  --blue: #3B82F6;
+  --green: #166534;
+  --green-light: #DCFCE7;
+  --green-text: #15803D;
+  --surface: #F8F8FC;
+  --border: #E5E7EB;
+  --muted: #6B7280;
+  --purple: #7C3AED;
+  --purple-light: #EDE9FE;
+  --red: #DC2626;
+  --red-light: #FEE2E2;
+  --amber-light: #FEF3C7;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--surface);
+  color: var(--navy);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+code, pre, .mono { font-family: 'DM Mono', monospace; }
+
+/* ── Layout ── */
+.layout {
+  display: grid;
+  grid-template-columns: 300px 1fr 420px;
+  height: 100vh;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .layout { grid-template-columns: 1fr; height: auto; overflow: auto; }
+  .col { max-height: none !important; overflow: visible !important; }
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+.col-left { background: var(--navy); border-right: 1px solid rgba(255,255,255,0.08); }
+.col-mid  { background: var(--surface); border-right: 1px solid var(--border); }
+.col-right { background: #fff; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 99px; }
+
+/* ── LEFT COLUMN ── */
+.left-header {
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.brand-dot {
+  width: 10px; height: 10px;
+  background: var(--amber);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.brand h1 {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.brand p { color: rgba(255,255,255,0.45); font-size: 11px; margin-top: 1px; }
+
+.api-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.api-status.online  { background: rgba(22,101,52,0.3); color: #86EFAC; }
+.api-status.offline { background: rgba(220,38,38,0.2); color: #FCA5A5; }
+
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.api-status.online .status-dot  { background: #4ADE80; box-shadow: 0 0 6px #4ADE80; }
+.api-status.offline .status-dot { background: #F87171; }
+
+/* Quick test buttons */
+.tests-section { padding: 14px 12px; flex: 1; }
+.tests-label { color: rgba(255,255,255,0.35); font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; padding: 0 4px; }
+
+.test-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255,255,255,0.75);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+  margin-bottom: 2px;
+  position: relative;
+}
+
+.test-btn:hover {
+  background: rgba(255,255,255,0.07);
+  color: #fff;
+  border-color: rgba(255,255,255,0.1);
+}
+
+.test-btn.active {
+  background: rgba(239,159,39,0.15);
+  border-color: rgba(239,159,39,0.4);
+  color: var(--amber);
+}
+
+.test-btn .emoji { font-size: 15px; flex-shrink: 0; width: 20px; text-align: center; }
+.test-btn .name  { flex: 1; }
+
+.badge {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 2px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.badge-amber  { background: rgba(239,159,39,0.2); color: var(--amber); }
+.badge-blue   { background: rgba(59,130,246,0.2); color: #60A5FA; }
+.badge-green  { background: rgba(22,101,52,0.3);  color: #86EFAC; }
+.badge-red    { background: rgba(220,38,38,0.2);  color: #FCA5A5; }
+.badge-purple { background: rgba(124,58,237,0.2); color: #A78BFA; }
+.badge-muted  { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.45); }
+
+/* Hover explanation box */
+.hover-explain {
+  margin: 8px 12px 12px;
+  padding: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  min-height: 72px;
+  transition: all 0.2s;
+}
+
+.hover-explain h4 {
+  color: var(--amber);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.hover-explain p {
+  color: rgba(255,255,255,0.6);
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+/* ── MIDDLE COLUMN ── */
+.mid-header {
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  background: #fff;
+}
+
+.mid-header h2 { font-size: 14px; font-weight: 600; color: var(--navy); }
+.mid-header p  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* Conversation bubbles */
+.chat-area {
+  flex: 1;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 180px;
+}
+
+.bubble-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.bubble-wrap.user  { align-items: flex-end; }
+.bubble-wrap.assistant { align-items: flex-start; }
+
+.bubble-role {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0 4px;
+}
+
+.bubble {
+  max-width: 80%;
+  padding: 9px 13px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  position: relative;
+  cursor: text;
+  transition: box-shadow 0.15s;
+}
+
+.bubble:hover { box-shadow: 0 0 0 2px var(--amber); }
+
+.bubble.user {
+  background: var(--navy);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.bubble.assistant {
+  background: #fff;
+  color: var(--navy);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+
+.bubble-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 3px;
+}
+
+.bubble-edit-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 2px 7px;
+  font-size: 10.5px;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+}
+
+.bubble-edit-btn:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
+.bubble-edit-btn.del:hover { background: var(--red); color: #fff; border-color: var(--red); }
+
+.bubble[contenteditable="true"] {
+  outline: 2px solid var(--amber);
+  cursor: text;
+  border-radius: 14px;
+}
+
+/* Add message buttons */
+.add-msg-bar {
+  padding: 0 20px 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.add-btn {
+  flex: 1;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1.5px dashed var(--border);
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--muted);
+  transition: all 0.15s;
+}
+
+.add-btn:hover { border-color: var(--amber); color: var(--amber); background: var(--amber-light); }
+
+/* Signals */
+.signals-section {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  background: #fff;
+}
+
+.signals-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.signals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.signal-item { display: flex; flex-direction: column; gap: 5px; }
+.signal-item.full { grid-column: 1 / -1; }
+
+.signal-label {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--navy);
+}
+
+/* Toggle switch */
+.toggle-wrap { display: flex; align-items: center; gap: 8px; }
+
+.toggle {
+  position: relative;
+  width: 38px; height: 21px;
+  cursor: pointer;
+}
+
+.toggle input { opacity: 0; width: 0; height: 0; }
+
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: #D1D5DB;
+  border-radius: 99px;
+  transition: background 0.2s;
+}
+
+.toggle input:checked + .toggle-track { background: var(--green-text); }
+
+.toggle-thumb {
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 15px; height: 15px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.toggle input:checked ~ .toggle-thumb { transform: translateX(17px); }
+
+.signal-input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--navy);
+  background: var(--surface);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.signal-input:focus { border-color: var(--amber); }
+
+/* Analyse button area */
+.analyse-area {
+  padding: 14px 20px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.analyse-btn {
+  width: 100%;
+  padding: 13px 20px;
+  background: var(--amber);
+  color: var(--navy);
+  border: none;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.01em;
+}
+
+.analyse-btn:hover { background: #d98e1e; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(239,159,39,0.4); }
+.analyse-btn:active { transform: translateY(0); }
+.analyse-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* Processing panel */
+.processing-panel {
+  margin: 0 20px 14px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: none;
+}
+
+.processing-panel.visible { display: block; }
+.processing-panel h3 { font-size: 13px; font-weight: 600; margin-bottom: 14px; color: var(--navy); }
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: all 0.25s;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.step-item.visible { opacity: 1; transform: translateY(0); }
+.step-item.done { color: var(--green-text); }
+
+.step-icon { width: 18px; height: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+
+.spinner {
+  width: 14px; height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--amber);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.step-check { color: var(--green-text); font-size: 14px; }
+
+/* ── RIGHT COLUMN ── */
+.right-col-inner { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+.right-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.right-placeholder .big-icon { font-size: 40px; opacity: 0.3; }
+.right-placeholder h3 { font-size: 14px; font-weight: 600; color: var(--navy); opacity: 0.5; }
+
+/* Result cards */
+.result-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.result-card-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.result-card-header h3 { font-size: 12.5px; font-weight: 600; color: var(--navy); flex: 1; }
+.result-card-body { padding: 14px 16px; }
+
+/* Info grid */
+.info-grid { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: center; }
+
+.info-key {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.info-val {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.method-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.method-gemini  { background: var(--purple-light); color: var(--purple); }
+.method-keywords { background: var(--amber-light); color: #92400E; }
+
+.explain-text {
+  font-size: 13px;
+  line-height: 1.65;
+  color: #374151;
+  margin-bottom: 12px;
+}
+
+/* Code block */
+.code-block {
+  background: var(--navy);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.code-block-header {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.code-block-header span { color: rgba(255,255,255,0.45); font-size: 11px; font-family: 'DM Mono', monospace; }
+
+.copy-btn {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7);
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+}
+
+.copy-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+.copy-btn.copied { background: rgba(22,101,52,0.4); color: #86EFAC; border-color: rgba(22,101,52,0.4); }
+
+.code-block pre {
+  padding: 12px 14px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: rgba(255,255,255,0.85);
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.code-comment { color: rgba(255,255,255,0.35); }
+.code-keyword { color: #93C5FD; }
+.code-string  { color: #86EFAC; }
+
+/* JSON toggle */
+.json-toggle-btn {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-align: left;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12.5px;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.15s;
+}
+
+.json-toggle-btn:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+.json-payload {
+  display: none;
+  background: var(--navy);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-top: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: rgba(255,255,255,0.8);
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.json-payload.open { display: block; }
+
+/* No-ad / error cards */
+.no-ad-card {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.no-ad-card h3 { font-size: 14px; font-weight: 700; color: #92400E; margin-bottom: 8px; }
+.no-ad-card p  { font-size: 13px; color: #78350F; line-height: 1.6; }
+
+.no-ad-suggestions { margin-top: 12px; }
+.no-ad-suggestions h4 { font-size: 11px; font-weight: 600; color: #92400E; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 7px; }
+.suggestion-chip { display: inline-block; padding: 3px 9px; background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 99px; font-size: 11.5px; color: #92400E; margin: 2px; cursor: pointer; transition: all 0.15s; }
+.suggestion-chip:hover { background: var(--amber); color: var(--navy); border-color: var(--amber); }
+
+.error-card {
+  background: var(--red-light);
+  border: 1px solid #FECACA;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.error-card h3 { font-size: 14px; font-weight: 700; color: var(--red); margin-bottom: 4px; }
+.error-card .error-code { font-family: 'DM Mono', monospace; font-size: 11px; color: #EF4444; margin-bottom: 8px; display: block; }
+.error-card p { font-size: 13px; color: #7F1D1D; line-height: 1.6; }
+
+/* ══════════════════════════════
+   AD FORMAT PREVIEWS
+══════════════════════════════ */
+
+.ad-preview-wrap { padding: 2px; }
+
+/* inline_text */
+.preview-inline-text {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--navy);
+  position: relative;
+}
+
+.preview-inline-text .sponsored-pill {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #92400E;
+  background: var(--amber-light);
+  border: 1px solid #FDE68A;
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-bottom: 6px;
+}
+
+.preview-inline-text .cta-link { color: var(--blue); text-decoration: underline; font-weight: 500; cursor: pointer; }
+
+/* text_voice_card */
+.preview-voice-card { border-radius: 12px; overflow: hidden; border: 1.5px solid var(--amber); }
+
+.voice-brief-box {
+  background: var(--purple-light);
+  padding: 10px 14px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.voice-icon { font-size: 16px; }
+.voice-brief-label { font-size: 9px; font-weight: 700; letter-spacing: 0.07em; color: var(--purple); text-transform: uppercase; }
+.voice-brief-text  { font-size: 12px; color: #4C1D95; font-style: italic; margin-top: 1px; line-height: 1.5; }
+
+.voice-card-body { background: #fff; padding: 12px 14px; }
+.vc-sponsor-label { font-size: 9px; font-weight: 700; letter-spacing: 0.07em; color: var(--amber); text-transform: uppercase; margin-bottom: 6px; }
+.vc-title    { font-size: 14px; font-weight: 700; color: var(--navy); }
+.vc-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.vc-delivery { font-size: 11.5px; color: var(--green-text); margin-top: 6px; font-weight: 500; }
+
+.vc-btns { display: flex; gap: 8px; margin-top: 12px; }
+.vc-btn-primary {
+  flex: 1; padding: 9px;
+  background: var(--navy); color: #fff;
+  border: none; border-radius: 8px;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+}
+.vc-btn-secondary {
+  padding: 9px 14px;
+  background: transparent; color: var(--muted);
+  border: 1.5px solid var(--border); border-radius: 8px;
+  font-family: 'DM Sans', sans-serif; font-size: 13px;
+  cursor: pointer; transition: all 0.15s;
+}
+
+/* mcp_transaction_card */
+.preview-transaction { border-radius: 12px; overflow: hidden; border: 1.5px solid var(--blue); }
+
+.tx-card-body { background: #fff; padding: 12px 14px; }
+.tx-header { font-size: 9px; font-weight: 700; letter-spacing: 0.07em; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; }
+
+.tx-product-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+
+.tx-product-icon {
+  width: 42px; height: 42px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.tx-product-info { flex: 1; }
+.tx-product-name { font-size: 13px; font-weight: 600; color: var(--navy); }
+.tx-product-variant { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.tx-product-price { font-size: 15px; font-weight: 700; color: var(--navy); }
+
+.tx-delivery { font-size: 11.5px; color: var(--green-text); font-weight: 500; margin-bottom: 12px; }
+
+.tx-confirm-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--navy); color: #fff;
+  border: none; border-radius: 10px;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s;
+}
+
+.tx-cancel-link {
+  display: block;
+  text-align: center;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* post_conv_chip */
+.preview-chips {
+  background: #F3F4F6;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.chips-label { font-size: 9px; font-weight: 700; letter-spacing: 0.07em; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+
+.chips-row { display: flex; flex-wrap: wrap; gap: 7px; }
+
+.chip {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 12px;
+  border-radius: 99px;
+  font-size: 12.5px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s;
+}
+
+.chip-sponsored {
+  background: #fff;
+  border: 1.5px solid var(--amber);
+  color: var(--navy);
+}
+
+.chip-organic {
+  background: #fff;
+  border: 1.5px solid var(--border);
+  color: var(--navy);
+}
+
+.chip:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+/* predictive_push */
+.preview-push {
+  background: var(--navy);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  position: relative;
+}
+
+.push-icon-box {
+  width: 42px; height: 42px;
+  background: rgba(239,159,39,0.2);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.push-content { flex: 1; }
+.push-title { font-size: 13.5px; font-weight: 700; color: #fff; }
+.push-body  { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 3px; line-height: 1.5; }
+.push-deadline { font-size: 11px; color: var(--amber); font-weight: 500; margin-top: 6px; }
+
+.push-cta {
+  padding: 6px 12px;
+  background: #fff;
+  color: var(--navy);
+  border: none;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  align-self: center;
+  transition: all 0.15s;
+}
+
+.push-close {
+  position: absolute;
+  top: 10px; right: 12px;
+  color: rgba(255,255,255,0.35);
+  font-size: 16px;
+  cursor: pointer;
+  line-height: 1;
+  background: none; border: none;
+}
+
+/* mcp_tool_chip */
+.preview-tool-chip { }
+
+.tool-chip-label { font-size: 11px; color: var(--muted); margin-bottom: 8px; font-style: italic; }
+.tool-chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+
+.tool-chip {
+  display: flex; align-items: center; gap: 5px;
+  padding: 7px 12px;
+  border-radius: 99px;
+  font-size: 12.5px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s;
+  border: 1.5px solid var(--border);
+  background: #F9FAFB;
+  color: var(--navy);
+}
+
+.tool-chip.sponsored {
+  background: #fff;
+  border-color: var(--navy);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  font-weight: 600;
+}
+
+.tool-chip:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.12); transform: translateY(-1px); }
+.tool-chip-note { font-size: 11px; color: var(--muted); font-style: italic; }
+
+/* teaser_hook */
+.preview-teaser { }
+
+.teaser-bubble {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  border-bottom-left-radius: 4px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--navy);
+  line-height: 1.5;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.teaser-replies { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+
+.teaser-reply {
+  padding: 7px 14px;
+  border: 1.5px solid var(--navy);
+  border-radius: 99px;
+  font-size: 12.5px; font-weight: 500;
+  color: var(--navy);
+  cursor: pointer;
+  background: #fff;
+  transition: all 0.15s;
+}
+
+.teaser-reply:hover { background: var(--navy); color: #fff; }
+
+.teaser-outcomes { display: flex; flex-direction: column; gap: 5px; }
+.teaser-outcome { font-size: 11.5px; color: var(--muted); display: flex; gap: 6px; align-items: flex-start; }
+.teaser-outcome .arr { color: var(--amber); font-weight: 700; }
+
+/* ── HISTORY ── */
+.history-section {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.history-title { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+
+.history-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 2px;
+}
+
+.history-row:hover { background: #F3F4F6; }
+
+.history-format { font-size: 11.5px; font-weight: 600; color: var(--navy); flex: 1; }
+.history-trigger { font-size: 10.5px; color: var(--muted); }
+.history-time   { font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+/* ── Utility ── */
+.divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+.fade-in { animation: fadeIn 0.25s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 10px 20px 6px;
+}
+
+.scroll-anchor { height: 1px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ══════════════════════════════════════════
+       LEFT COLUMN
+  ══════════════════════════════════════════ -->
+  <aside class="col col-left">
+    <div class="left-header">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <div>
+          <h1>AdMind API Tester</h1>
+          <p>Visual testing dashboard v1.0</p>
+        </div>
+      </div>
+      <div id="apiStatus" class="api-status offline">
+        <div class="status-dot"></div>
+        <span id="apiStatusText">Checking API...</span>
+      </div>
+    </div>
+
+    <div class="tests-section">
+      <div class="tests-label">Quick Tests</div>
+
+      <button class="test-btn" data-test="1" onclick="runQuickTest(1)" onmouseenter="showExplain(1)" onmouseleave="hideExplain()">
+        <span class="emoji">🧳</span>
+        <span class="name">Luggage mention</span>
+        <span class="badge badge-amber">teaser_hook</span>
+      </button>
+
+      <button class="test-btn" data-test="2" onclick="runQuickTest(2)" onmouseenter="showExplain(2)" onmouseleave="hideExplain()">
+        <span class="emoji">✈️</span>
+        <span class="name">Flight booked</span>
+        <span class="badge badge-blue">voice_card</span>
+      </button>
+
+      <button class="test-btn" data-test="3" onclick="runQuickTest(3)" onmouseenter="showExplain(3)" onmouseleave="hideExplain()">
+        <span class="emoji">💳</span>
+        <span class="name">Purchase intent</span>
+        <span class="badge badge-purple">mcp_tx</span>
+      </button>
+
+      <button class="test-btn" data-test="4" onclick="runQuickTest(4)" onmouseenter="showExplain(4)" onmouseleave="hideExplain()">
+        <span class="emoji">👋</span>
+        <span class="name">Conversation ended</span>
+        <span class="badge badge-green">post_chip</span>
+      </button>
+
+      <button class="test-btn" data-test="5" onclick="runQuickTest(5)" onmouseenter="showExplain(5)" onmouseleave="hideExplain()">
+        <span class="emoji">🔔</span>
+        <span class="name">Predictive push</span>
+        <span class="badge badge-amber">push · CPM</span>
+      </button>
+
+      <button class="test-btn" data-test="6" onclick="runQuickTest(6)" onmouseenter="showExplain(6)" onmouseleave="hideExplain()">
+        <span class="emoji">🔧</span>
+        <span class="name">Tool chip</span>
+        <span class="badge badge-blue">mcp_chip</span>
+      </button>
+
+      <button class="test-btn" data-test="7" onclick="runQuickTest(7)" onmouseenter="showExplain(7)" onmouseleave="hideExplain()">
+        <span class="emoji">🌤️</span>
+        <span class="name">No match</span>
+        <span class="badge badge-muted">null</span>
+      </button>
+
+      <button class="test-btn" data-test="8" onclick="runQuickTest(8)" onmouseenter="showExplain(8)" onmouseleave="hideExplain()">
+        <span class="emoji">🔑</span>
+        <span class="name">Wrong API key</span>
+        <span class="badge badge-red">401</span>
+      </button>
+    </div>
+
+    <div class="hover-explain" id="hoverExplain">
+      <h4>What will this test?</h4>
+      <p id="hoverExplainText" style="color:rgba(255,255,255,0.35);font-style:italic;">Hover a button above to see what it tests and why.</p>
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════════════
+       MIDDLE COLUMN
+  ══════════════════════════════════════════ -->
+  <main class="col col-mid">
+    <div class="mid-header">
+      <h2>Conversation Builder</h2>
+      <p>Edit messages, add turns, then hit Analyse to call the API</p>
+    </div>
+
+    <div class="chat-area" id="chatArea"></div>
+
+    <div class="add-msg-bar">
+      <button class="add-btn" onclick="addMessage('user')">+ Add user message</button>
+      <button class="add-btn" onclick="addMessage('assistant')">+ Add assistant message</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="signals-section">
+      <div class="signals-title">Signals</div>
+      <div class="signals-grid">
+        <div class="signal-item">
+          <div class="signal-label">Trip Confirmed</div>
+          <label class="toggle">
+            <input type="checkbox" id="tripConfirmed">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <div class="signal-item">
+          <div class="signal-label">Conversation Ended</div>
+          <label class="toggle">
+            <input type="checkbox" id="convEnded">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <div class="signal-item">
+          <div class="signal-label">Days Before Departure</div>
+          <input type="number" class="signal-input" id="daysBeforeDeparture" placeholder="e.g. 6" min="0" max="365">
+        </div>
+        <div class="signal-item">
+          <div class="signal-label">Publisher Key</div>
+          <input type="text" class="signal-input" id="publisherKey" value="admind_test_key_123">
+        </div>
+      </div>
+    </div>
+
+    <div class="processing-panel" id="processingPanel">
+      <h3>Processing your conversation</h3>
+      <div class="step-item" id="step1">
+        <div class="step-icon"><div class="spinner"></div></div>
+        <span>Sending conversation to AdMind API...</span>
+      </div>
+      <div class="step-item" id="step2">
+        <div class="step-icon"><div class="spinner"></div></div>
+        <span>Gemini analysing intent...</span>
+      </div>
+      <div class="step-item" id="step3">
+        <div class="step-icon"><div class="spinner"></div></div>
+        <span>Matching against active campaigns...</span>
+      </div>
+      <div class="step-item" id="step4">
+        <div class="step-icon"><div class="spinner"></div></div>
+        <span>Building ad payload...</span>
+      </div>
+    </div>
+
+    <div class="analyse-area">
+      <button class="analyse-btn" id="analyseBtn" onclick="analyseConversation()">
+        Analyse Conversation →
+      </button>
+    </div>
+  </main>
+
+  <!-- ══════════════════════════════════════════
+       RIGHT COLUMN
+  ══════════════════════════════════════════ -->
+  <aside class="col col-right">
+    <div class="scroll-anchor" id="rightTop"></div>
+    <div id="rightColContent">
+      <div class="right-placeholder">
+        <div class="big-icon">📊</div>
+        <h3>No result yet</h3>
+        <p>Select a quick test on the left, or build a conversation and click Analyse.</p>
+      </div>
+    </div>
+    <div class="history-section" id="historySection" style="display:none">
+      <div class="history-title">Recent Tests</div>
+      <div id="historyList"></div>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════════════════ */
+const QUICK_TESTS = {
+  1: {
+    name: "Luggage mention",
+    conversation: [
+      { role: "user", content: "I just booked flights to Goa for 5 people" },
+      { role: "assistant", content: "Great! Goa in May is lovely." },
+      { role: "user", content: "I need to sort out luggage for everyone" }
+    ],
+    signals: { trip_confirmed: false, conversation_ended: false, days_before_departure: null },
+    explain: "This conversation has a confirmed booking and a clear luggage need. AdMind will detect 'luggage_needed' intent and fire a teaser_hook — asking the user if they have luggage sorted before showing the full ad. This is the most common format for travel apps."
+  },
+  2: {
+    name: "Flight booked",
+    conversation: [
+      { role: "user", content: "Book me flights to Kerala for 3 people" },
+      { role: "assistant", content: "Done! Your flights to Kerala are confirmed." },
+      { role: "user", content: "Perfect thank you" }
+    ],
+    signals: { trip_confirmed: true, conversation_ended: false, days_before_departure: null },
+    explain: "A confirmed booking is a high-intent moment. AdMind fires the Multimodal Card — the publisher's AI speaks a voice brief while a product card slides up on screen simultaneously. Two channels: voice carries the message, the card carries the action."
+  },
+  3: {
+    name: "Purchase intent",
+    conversation: [
+      { role: "user", content: "I want to order luggage right now" },
+      { role: "assistant", content: "Sure, what size are you looking for?" },
+      { role: "user", content: "I want to buy one, how much does VIP cost?" }
+    ],
+    signals: { trip_confirmed: false, conversation_ended: false, days_before_departure: null },
+    explain: "The user explicitly wants to buy. AdMind fires the MCP Transaction Card — the highest-intent format. The user can complete the purchase directly inside the conversation. CPA billing means the advertiser only pays when the order is placed."
+  },
+  4: {
+    name: "Conversation ended",
+    conversation: [
+      { role: "user", content: "That's everything, thank you!" },
+      { role: "assistant", content: "Have a great trip to Goa!" }
+    ],
+    signals: { trip_confirmed: false, conversation_ended: true, days_before_departure: null },
+    explain: "The trip is planned and the conversation is wrapping up. AdMind fires the Category Chips — a row of product discovery chips appears below the last message. The VIP chip sits at position 0 alongside organic chips like Sunscreen and Clothes."
+  },
+  5: {
+    name: "Predictive push",
+    conversation: [
+      { role: "user", content: "My flight is in 6 days, anything to prepare?" }
+    ],
+    signals: { trip_confirmed: false, conversation_ended: false, days_before_departure: 6 },
+    explain: "6 days before departure is within the T-8 window. AdMind fires the Predictive Push — a notification with real urgency because the delivery deadline is calculated from the actual flight date. CPM is billed on send, CPC on tap."
+  },
+  6: {
+    name: "Tool chip",
+    conversation: [
+      { role: "user", content: "Planning a trip to Goa from May 22 to May 29" },
+      { role: "assistant", content: "Great dates! Let me help you plan." },
+      { role: "user", content: "What should I pack for 7 days?" }
+    ],
+    signals: { trip_confirmed: false, conversation_ended: false, days_before_departure: null },
+    explain: "Trip dates are confirmed in the conversation. AdMind injects the VIP Tool Chip alongside the publisher's native chips. It looks like a built-in feature. When the user taps it, it calls VIP's MCP server to check availability for those exact dates."
+  },
+  7: {
+    name: "No match",
+    conversation: [
+      { role: "user", content: "What is the weather like today?" }
+    ],
+    signals: { trip_confirmed: false, conversation_ended: false, days_before_departure: null },
+    explain: "This conversation has no travel, shopping, or product intent. AdMind returns null — no ad fires. Publishers are never charged when no ad fires. The SDK renders nothing."
+  },
+  8: {
+    name: "Wrong API key",
+    conversation: [
+      { role: "user", content: "Hello" }
+    ],
+    signals: { trip_confirmed: false, conversation_ended: false, days_before_departure: null },
+    publisherKey: "wrong_key_123",
+    explain: "An invalid publisher key returns a 401 error with code ADMIND_001. This protects advertisers from unauthorised publishers serving their ads."
+  }
+};
+
+const FORMAT_EXPLAINS = {
+  inline_text: "AdMind detected a keyword match — the user mentioned luggage while discussing a trip. This is the simplest format: one sentence woven into the conversation with a tappable link. The ad text comes pre-written from the advertiser — the publisher's AI does not generate it.",
+  text_voice_card: "AdMind detected a high-intent moment — a flight was just confirmed. The publisher's AI will speak the voice brief in its own voice, while a product card slides up from the bottom of the screen at the same time. Two channels working together: voice carries the message, the card carries the action.",
+  mcp_transaction_card: "AdMind detected purchase intent — the user explicitly wants to buy. This is the highest-value format: a complete checkout inside the conversation. No redirect, no browser. The user confirms and AdMind calls VIP's MCP server to place the real order. Billing only fires when the purchase completes.",
+  post_conv_chip: "The conversation has ended — trip is planned, booking confirmed. AdMind fires the Category Chips: a discovery row that appears below the last message. The VIP chip sits first (slot_position: 0) with an amber border. The publisher adds their own organic chips alongside it.",
+  predictive_push: "AdMind detected the user is within 8 days of their departure. This format fires outside any active conversation — purely behavioural. The delivery deadline is calculated from the real flight date. CPM is billed when the notification is sent, CPC is billed if the user taps through.",
+  mcp_tool_chip: "AdMind detected trip planning context with confirmed dates. The VIP tool chip is injected alongside the publisher's native chips. It looks and feels like a built-in feature. When the user taps it, AdMind calls VIP's MCP server to check real stock and delivery availability for those exact travel dates.",
+  teaser_hook: "AdMind detected trip planning intent but the user has not signalled a clear purchase intent yet. The teaser_hook asks first before showing the full ad. If the user says 'Yes, sorted' — the ad is skipped entirely. If they say 'Not yet' — the full VIP card appears in turn 2. This is the most consent-respecting format and has the highest engagement rate."
+};
+
+const FORMAT_BILLING = {
+  inline_text: "CPT + CPC",
+  text_voice_card: "CPC",
+  mcp_transaction_card: "CPA",
+  post_conv_chip: "CPC",
+  predictive_push: "CPM + CPC",
+  mcp_tool_chip: "CPT",
+  teaser_hook: "CPT + CPC"
+};
+
+const FORMAT_CODE = {
+  inline_text: `<span class="code-comment">// AdMind detected: inline_text</span>
+<span class="code-comment">// Add this below your last AI message bubble:</span>
+<span class="code-keyword">if</span> (ad != <span class="code-keyword">null</span> && ad[<span class="code-string">'format'</span>] == <span class="code-string">'inline_text'</span>)
+  InlineTextAdWidget(payload: AdMindPayload.fromJson(ad))`,
+
+  text_voice_card: `<span class="code-comment">// AdMind detected: text_voice_card</span>
+<span class="code-comment">// Speak the brief first, then show the widget:</span>
+<span class="code-keyword">await</span> yourTTS.speak(ad[<span class="code-string">'serve'</span>][<span class="code-string">'voice_brief'</span>]);
+<span class="code-keyword">if</span> (ad != <span class="code-keyword">null</span>) MultimodalCardWidget(
+  payload: AdMindPayload.fromJson(ad),
+  onDismiss: () => setState(() => _ad = <span class="code-keyword">null</span>),
+)`,
+
+  mcp_transaction_card: `<span class="code-comment">// AdMind detected: mcp_transaction_card</span>
+<span class="code-comment">// Wire your MCP bridge to onConfirm:</span>
+MCPTransactionCardWidget(
+  payload: AdMindPayload.fromJson(ad),
+  onConfirm: (params) <span class="code-keyword">async</span> => <span class="code-keyword">await</span> yourMCP.placeOrder(params),
+  onDismiss: () => setState(() => _ad = <span class="code-keyword">null</span>),
+)`,
+
+  post_conv_chip: `<span class="code-comment">// AdMind detected: post_conv_chip</span>
+<span class="code-comment">// Fire this when conversation ends:</span>
+PostConvChipsWidget(
+  payload: AdMindPayload.fromJson(ad),
+  organicChips: [
+    ChipData(label: <span class="code-string">'Sunscreen'</span>, icon: <span class="code-string">'health'</span>),
+    ChipData(label: <span class="code-string">'Kerala clothes'</span>, icon: <span class="code-string">'clothes'</span>),
+  ],
+)`,
+
+  predictive_push: `<span class="code-comment">// AdMind detected: predictive_push</span>
+<span class="code-comment">// Show as in-app banner when app is foregrounded:</span>
+PredictivePushBannerWidget(
+  payload: AdMindPayload.fromJson(ad),
+  onDismiss: () => setState(() => _ad = <span class="code-keyword">null</span>),
+)`,
+
+  mcp_tool_chip: `<span class="code-comment">// AdMind detected: mcp_tool_chip</span>
+<span class="code-comment">// Drop alongside your native chips:</span>
+MCPToolChipWidget(
+  payload: AdMindPayload.fromJson(ad),
+  onToolCall: (params) <span class="code-keyword">async</span> => <span class="code-keyword">await</span> yourMCP.callTool(params),
+)`,
+
+  teaser_hook: `<span class="code-comment">// AdMind detected: teaser_hook</span>
+<span class="code-comment">// Drop below your last AI message:</span>
+TeaserAdWidget(
+  payload: AdMindPayload.fromJson(ad),
+  onDismiss: () => setState(() => _ad = <span class="code-keyword">null</span>),
+)`
+};
+
+/* ═══════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════ */
+let conversation = [];
+let testHistory = [];
+let activeTest = null;
+
+/* ═══════════════════════════════════════════════════════
+   API STATUS POLLING
+═══════════════════════════════════════════════════════ */
+async function checkApiStatus() {
+  const statusEl = document.getElementById('apiStatus');
+  const textEl   = document.getElementById('apiStatusText');
+  try {
+    const res = await fetch('http://localhost:8000/', { signal: AbortSignal.timeout(4000) });
+    if (res.ok) {
+      statusEl.className = 'api-status online';
+      textEl.textContent = 'API Online';
+    } else {
+      throw new Error('not ok');
+    }
+  } catch {
+    statusEl.className = 'api-status offline';
+    textEl.textContent = 'API Offline — run uvicorn';
+  }
+}
+
+checkApiStatus();
+setInterval(checkApiStatus, 5000);
+
+/* ═══════════════════════════════════════════════════════
+   HOVER EXPLAIN
+═══════════════════════════════════════════════════════ */
+function showExplain(n) {
+  document.getElementById('hoverExplainText').style.fontStyle = 'normal';
+  document.getElementById('hoverExplainText').style.color = 'rgba(255,255,255,0.6)';
+  document.getElementById('hoverExplainText').textContent = QUICK_TESTS[n].explain;
+}
+
+function hideExplain() {
+  document.getElementById('hoverExplainText').style.fontStyle = 'italic';
+  document.getElementById('hoverExplainText').style.color = 'rgba(255,255,255,0.35)';
+  document.getElementById('hoverExplainText').textContent = 'Hover a button above to see what it tests and why.';
+}
+
+/* ═══════════════════════════════════════════════════════
+   CONVERSATION BUILDER
+═══════════════════════════════════════════════════════ */
+function renderChat() {
+  const area = document.getElementById('chatArea');
+  if (conversation.length === 0) {
+    area.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px 0;font-style:italic;">No messages yet. Add some above or pick a quick test.</div>';
+    return;
+  }
+  area.innerHTML = conversation.map((msg, i) => `
+    <div class="bubble-wrap ${msg.role}">
+      <div class="bubble-role">${msg.role === 'user' ? 'You (user)' : 'AI assistant'}</div>
+      <div class="bubble ${msg.role}" id="bubble-${i}" onclick="editBubble(${i})">${escHtml(msg.content)}</div>
+      <div class="bubble-actions">
+        <button class="bubble-edit-btn" onclick="editBubble(${i})">✏ Edit</button>
+        <button class="bubble-edit-btn del" onclick="deleteBubble(${i})">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function addMessage(role) {
+  conversation.push({ role, content: role === 'user' ? 'Type your message here...' : 'Type assistant response here...' });
+  renderChat();
+  const i = conversation.length - 1;
+  setTimeout(() => editBubble(i), 50);
+}
+
+function deleteBubble(i) {
+  conversation.splice(i, 1);
+  renderChat();
+}
+
+function editBubble(i) {
+  const el = document.getElementById(`bubble-${i}`);
+  if (!el) return;
+  el.contentEditable = 'true';
+  el.focus();
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  window.getSelection().removeAllRanges();
+  window.getSelection().addRange(range);
+  el.onblur = () => {
+    el.contentEditable = 'false';
+    conversation[i].content = el.textContent.trim() || conversation[i].content;
+    renderChat();
+  };
+  el.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); el.blur(); } };
+}
+
+/* ═══════════════════════════════════════════════════════
+   QUICK TESTS
+═══════════════════════════════════════════════════════ */
+function runQuickTest(n) {
+  const test = QUICK_TESTS[n];
+
+  // Highlight active button
+  document.querySelectorAll('.test-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-test="${n}"]`).classList.add('active');
+  activeTest = n;
+
+  // Load conversation
+  conversation = test.conversation.map(m => ({ ...m }));
+  renderChat();
+
+  // Load signals
+  document.getElementById('tripConfirmed').checked   = test.signals.trip_confirmed;
+  document.getElementById('convEnded').checked        = test.signals.conversation_ended;
+  document.getElementById('daysBeforeDeparture').value = test.signals.days_before_departure || '';
+  document.getElementById('publisherKey').value       = test.publisherKey || 'admind_test_key_123';
+}
+
+/* ═══════════════════════════════════════════════════════
+   ANALYSE
+═══════════════════════════════════════════════════════ */
+async function analyseConversation() {
+  if (conversation.length === 0) {
+    alert('Add at least one message to the conversation first.');
+    return;
+  }
+
+  const btn = document.getElementById('analyseBtn');
+  btn.disabled = true;
+  btn.textContent = 'Analysing...';
+
+  // Show processing panel
+  const panel = document.getElementById('processingPanel');
+  panel.classList.add('visible');
+  ['step1','step2','step3','step4'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('visible','done');
+    el.querySelector('.step-icon').innerHTML = '<div class="spinner"></div>';
+  });
+
+  // Animate steps
+  await showStep('step1', 0);
+  await showStep('step2', 300);
+  await showStep('step3', 600);
+  await showStep('step4', 900);
+
+  // Build request body
+  const body = {
+    conversation: conversation,
+    user_id: "tester_" + Date.now(),
+    publisher_key: document.getElementById('publisherKey').value.trim(),
+    session_id: "session_" + Date.now(),
+    trip_confirmed: document.getElementById('tripConfirmed').checked,
+    conversation_ended: document.getElementById('convEnded').checked,
+  };
+
+  const days = document.getElementById('daysBeforeDeparture').value;
+  if (days !== '') body.days_before_departure = parseInt(days);
+
+  let result = null;
+  let error  = null;
+
+  try {
+    const res = await fetch('http://localhost:8000/v1/analyse', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const errData = await res.json();
+      error = { status: res.status, data: errData };
+    } else {
+      result = await res.json();
+    }
+  } catch(e) {
+    error = { status: 0, data: { detail: e.message || 'Network error. Is the API running at localhost:8000?' } };
+  }
+
+  // Mark all steps done
+  await new Promise(r => setTimeout(r, 200));
+  ['step1','step2','step3','step4'].forEach(id => markStepDone(id));
+
+  await new Promise(r => setTimeout(r, 500));
+  panel.classList.remove('visible');
+  btn.disabled = false;
+  btn.textContent = 'Analyse Conversation →';
+
+  // Render result
+  if (error) {
+    renderError(error);
+  } else if (!result || !result.ad) {
+    renderNoAd(result);
+  } else {
+    renderResult(result);
+  }
+
+  // Scroll right column into view
+  document.getElementById('rightTop').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function showStep(id, delay) {
+  await new Promise(r => setTimeout(r, delay));
+  document.getElementById(id).classList.add('visible');
+}
+
+function markStepDone(id) {
+  const el = document.getElementById(id);
+  el.classList.add('done');
+  el.querySelector('.step-icon').innerHTML = '<span class="step-check">✓</span>';
+}
+
+/* ═══════════════════════════════════════════════════════
+   RENDER RESULTS
+═══════════════════════════════════════════════════════ */
+function renderResult(data) {
+  const format   = data.format;
+  const ad       = data.ad;
+  const meta     = ad.meta || {};
+  const serve    = ad.serve || {};
+
+  // Add to history
+  addHistory({ format, triggered_by: data.triggered_by, data, timestamp: new Date() });
+
+  const methodBadge = meta.method === 'gemini'
+    ? '<span class="method-badge method-gemini">🤖 gemini</span>'
+    : '<span class="method-badge method-keywords">🔤 keywords</span>';
+
+  const confidence = meta.confidence ? (meta.confidence * 100).toFixed(0) + '%' : '—';
+  const billing    = FORMAT_BILLING[format] || '—';
+  const explain    = FORMAT_EXPLAINS[format] || 'Ad returned from the API.';
+  const code       = FORMAT_CODE[format] || '';
+
+  document.getElementById('rightColContent').innerHTML = `
+    <div class="right-col-inner fade-in">
+
+      <!-- WHAT HAPPENED -->
+      <div class="result-card">
+        <div class="result-card-header">
+          <span style="font-size:16px;">💡</span>
+          <h3>What just happened</h3>
+        </div>
+        <div class="result-card-body">
+          <p class="explain-text">${explain}</p>
+          <div class="info-grid">
+            <span class="info-key">Intent detected</span>
+            <span class="info-val">${data.triggered_by || '—'}</span>
+            <span class="info-key">Confidence</span>
+            <span class="info-val">${confidence}</span>
+            <span class="info-key">Method</span>
+            <span class="info-val">${methodBadge}</span>
+            <span class="info-key">Advertiser</span>
+            <span class="info-val">${meta.advertiser || '—'}</span>
+            <span class="info-key">Format fired</span>
+            <span class="info-val" style="font-family:'DM Mono',monospace;font-size:11px;">${format}</span>
+            <span class="info-key">Billing event</span>
+            <span class="info-val">${billing}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AD PREVIEW -->
+      <div class="result-card">
+        <div class="result-card-header">
+          <span style="font-size:16px;">📱</span>
+          <h3>Visual Ad Preview</h3>
+          <span style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;">${format}</span>
+        </div>
+        <div class="result-card-body">
+          <div class="ad-preview-wrap">
+            ${renderAdPreview(format, ad)}
+          </div>
+        </div>
+      </div>
+
+      <!-- HOW TO INTEGRATE -->
+      <div class="result-card">
+        <div class="result-card-header">
+          <span style="font-size:16px;">🛠</span>
+          <h3>How to integrate this</h3>
+        </div>
+        <div class="result-card-body" style="padding:0;">
+          <div class="code-block">
+            <div class="code-block-header">
+              <span>Flutter / Dart</span>
+              <button class="copy-btn" onclick="copyCode(this, \`${escAttr(getPlainCode(format))}\`)">Copy</button>
+            </div>
+            <pre><code>${code}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- RAW JSON -->
+      <div>
+        <button class="json-toggle-btn" onclick="toggleJson(this)">
+          <span>View full payload →</span>
+          <span style="font-size:11px;color:var(--muted);">JSON</span>
+        </button>
+        <div class="json-payload" id="jsonPayload">${syntaxHighlight(JSON.stringify(data, null, 2))}</div>
+      </div>
+
+    </div>
+  `;
+}
+
+function renderNoAd(data) {
+  addHistory({ format: 'null', triggered_by: data?.triggered_by || 'none', data, timestamp: new Date() });
+  document.getElementById('rightColContent').innerHTML = `
+    <div class="right-col-inner fade-in">
+      <div class="no-ad-card">
+        <h3>No ad fired</h3>
+        <p>AdMind analysed the conversation and found no intent that matched any active campaign. The API returned <strong>null</strong>. Publishers are never charged when no ad fires — the SDK simply renders nothing.</p>
+        <div class="no-ad-suggestions">
+          <h4>Try adding one of these phrases:</h4>
+          <span class="suggestion-chip" onclick="addSuggestion('I need to sort out luggage')">🧳 I need to sort out luggage</span>
+          <span class="suggestion-chip" onclick="addSuggestion('My flights are confirmed')">✈️ My flights are confirmed</span>
+          <span class="suggestion-chip" onclick="addSuggestion('I want to buy luggage right now')">💳 I want to buy luggage now</span>
+          <span class="suggestion-chip" onclick="addSuggestion('What should I pack?')">📦 What should I pack?</span>
+        </div>
+      </div>
+      ${data ? `<div><button class="json-toggle-btn" onclick="toggleJson(this)"><span>View full response →</span><span style="font-size:11px;color:var(--muted);">JSON</span></button><div class="json-payload" id="jsonPayload">${syntaxHighlight(JSON.stringify(data, null, 2))}</div></div>` : ''}
+    </div>
+  `;
+}
+
+function renderError(error) {
+  addHistory({ format: `${error.status} error`, triggered_by: 'error', data: error, timestamp: new Date() });
+  const detail = error.data?.detail || error.data?.error || 'Unknown error';
+  const code   = (typeof detail === 'object') ? detail.code : (error.data?.code || '—');
+  const msg    = (typeof detail === 'object') ? detail.error : detail;
+
+  let plainMsg = msg;
+  if (error.status === 401) {
+    const key = document.getElementById('publisherKey').value;
+    plainMsg = `The publisher key "${key}" is not recognised. Make sure you're using 'admind_test_key_123' for testing, or a key starting with 'pub_'.`;
+  } else if (error.status === 0) {
+    plainMsg = msg + ' Check that your FastAPI server is running: uvicorn main:app --reload';
+  } else if (error.status === 400) {
+    plainMsg = `The request was invalid: ${msg}. Make sure the conversation has at least one message.`;
+  }
+
+  document.getElementById('rightColContent').innerHTML = `
+    <div class="right-col-inner fade-in">
+      <div class="error-card">
+        <h3>${error.status ? `HTTP ${error.status} Error` : 'Connection Error'}</h3>
+        ${code !== '—' ? `<code class="error-code">${code}</code>` : ''}
+        <p>${plainMsg}</p>
+      </div>
+    </div>
+  `;
+}
+
+/* ═══════════════════════════════════════════════════════
+   AD FORMAT PREVIEWS
+═══════════════════════════════════════════════════════ */
+function renderAdPreview(format, ad) {
+  const serve = ad.serve || {};
+  switch(format) {
+    case 'inline_text':
+      return `
+        <div class="preview-inline-text">
+          <div class="sponsored-pill">SPONSORED</div>
+          <div>${escHtml(serve.text || 'For a 7-night trip with 5 people, VIP\'s 78cm hardcase is ₹3,499 with free 48h delivery and 10% MMT cashback.')}
+          <span class="cta-link"> ${escHtml(serve.cta_label || 'Shop VIP Luggage')}</span></div>
+        </div>`;
+
+    case 'text_voice_card':
+      const card2 = serve.card || {};
+      return `
+        <div class="preview-voice-card">
+          <div class="voice-brief-box">
+            <div class="voice-icon">🎙️</div>
+            <div>
+              <div class="voice-brief-label">VOICE BRIEF</div>
+              <div class="voice-brief-text">${escHtml(serve.voice_brief || 'Family travelling — mention VIP luggage set post-booking.')}</div>
+            </div>
+          </div>
+          <div class="voice-card-body">
+            <div class="vc-sponsor-label">SPONSORED · VIP LUGGAGE</div>
+            <div class="vc-title">${escHtml(card2.title || 'VIP Skybags Pro — Family Set')}</div>
+            <div class="vc-subtitle">${escHtml(card2.subtitle || '78cm + 68cm hardcase · ₹5,999')}</div>
+            <div class="vc-delivery">✓ ${escHtml(card2.delivery_line || 'Free delivery before departure')}</div>
+            <div class="vc-btns">
+              <button class="vc-btn-primary">${escHtml(card2.cta_primary_label || 'Shop now')}</button>
+              <button class="vc-btn-secondary">${escHtml(card2.cta_secondary_label || 'Dismiss')}</button>
+            </div>
+          </div>
+        </div>`;
+
+    case 'mcp_transaction_card':
+      const card3 = serve.card || {};
+      return `
+        <div class="preview-transaction">
+          <div class="voice-brief-box">
+            <div class="voice-icon">🎙️</div>
+            <div>
+              <div class="voice-brief-label">VOICE BRIEF</div>
+              <div class="voice-brief-text">${escHtml(serve.voice_brief || 'Mention VIP luggage, ask if user wants to order.')}</div>
+            </div>
+          </div>
+          <div class="tx-card-body">
+            <div class="tx-header">COMPLETING YOUR ORDER</div>
+            <div class="tx-product-row">
+              <div class="tx-product-icon">🧳</div>
+              <div class="tx-product-info">
+                <div class="tx-product-name">${escHtml(card3.title || 'VIP Skybags Pro 78cm')}</div>
+                <div class="tx-product-variant">${escHtml(card3.variant || 'Navy')}</div>
+              </div>
+              <div class="tx-product-price">${escHtml(card3.price || '₹3,499')}</div>
+            </div>
+            <div class="tx-delivery">✓ ${escHtml(card3.delivery_label || 'Arriving before your flight')}</div>
+            <button class="tx-confirm-btn">${escHtml(card3.cta_label || 'Confirm & Pay ₹3,499')}</button>
+            <span class="tx-cancel-link">Cancel</span>
+          </div>
+        </div>`;
+
+    case 'post_conv_chip':
+      const chip = serve.sponsored_chip || {};
+      return `
+        <div class="preview-chips">
+          <div class="chips-label">${escHtml(serve.section_label || 'Before you go — essentials').toUpperCase()}</div>
+          <div class="chips-row">
+            <div class="chip chip-sponsored">🧳 ${escHtml(chip.label || 'Luggage — VIP')}</div>
+            <div class="chip chip-organic">☀️ Sunscreen</div>
+            <div class="chip chip-organic">👕 Clothes</div>
+            <div class="chip chip-organic">🔌 Adapters</div>
+          </div>
+        </div>`;
+
+    case 'predictive_push':
+      return `
+        <div class="preview-push">
+          <div class="push-icon-box">🧳</div>
+          <div class="push-content">
+            <div class="push-title">${escHtml(serve.title || 'Packing time?')}</div>
+            <div class="push-body">${escHtml(serve.body || "VIP's family set is ₹5,999 — free delivery before your flight.")}</div>
+            <div class="push-deadline">⏰ ${escHtml(serve.deadline_label || 'Last delivery date: 3 days before departure')}</div>
+          </div>
+          <button class="push-cta">${escHtml(serve.cta_label || 'View deal')}</button>
+          <button class="push-close">×</button>
+        </div>`;
+
+    case 'mcp_tool_chip':
+      return `
+        <div class="preview-tool-chip">
+          <div class="tool-chip-label">Appears alongside publisher's native chips:</div>
+          <div class="tool-chip-row">
+            <div class="tool-chip">🏨 Find hotels</div>
+            <div class="tool-chip">🗓 Plan itinerary</div>
+            <div class="tool-chip sponsored">🧳 ${escHtml(serve.chip_label || 'Check VIP Luggage for my dates')}</div>
+          </div>
+          <div class="tool-chip-note">User taps → VIP's MCP server checks availability for their travel dates</div>
+        </div>`;
+
+    case 'teaser_hook':
+      const replies = serve.quick_replies || ['Yes, sorted', 'Not yet', 'Just browsing'];
+      return `
+        <div class="preview-teaser">
+          <div class="teaser-bubble">🤖 ${escHtml(serve.teaser_question || 'Got luggage sorted for your flight?')}</div>
+          <div class="teaser-replies">
+            ${replies.map(r => `<div class="teaser-reply">${escHtml(r)}</div>`).join('')}
+          </div>
+          <div class="teaser-outcomes">
+            <div class="teaser-outcome"><span class="arr">→</span><span><strong>"Yes, sorted"</strong> — ad skipped entirely (skip_if_positive: true)</span></div>
+            <div class="teaser-outcome"><span class="arr">→</span><span><strong>"Not yet"</strong> — full VIP Luggage card appears in Turn 2</span></div>
+          </div>
+        </div>`;
+
+    default:
+      return `<div style="padding:12px;color:var(--muted);font-size:13px;">No preview available for format: ${escHtml(format)}</div>`;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   HISTORY
+═══════════════════════════════════════════════════════ */
+function addHistory(entry) {
+  testHistory.unshift(entry);
+  if (testHistory.length > 5) testHistory.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  const section = document.getElementById('historySection');
+  const list    = document.getElementById('historyList');
+  if (testHistory.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  list.innerHTML = testHistory.map((h, i) => `
+    <div class="history-row" onclick="replayHistory(${i})">
+      <span class="history-format">${h.format}</span>
+      <span class="history-trigger">${h.triggered_by || 'none'}</span>
+      <span class="history-time">${formatTime(h.timestamp)}</span>
+    </div>
+  `).join('');
+}
+
+function replayHistory(i) {
+  const h = testHistory[i];
+  if (!h.data) return;
+  if (h.format.includes('error')) {
+    renderError(h.data);
+  } else if (h.format === 'null' || !h.data.ad) {
+    renderNoAd(h.data);
+  } else {
+    renderResult(h.data);
+  }
+  document.getElementById('rightTop').scrollIntoView({ behavior: 'smooth' });
+}
+
+function formatTime(d) {
+  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+/* ═══════════════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════════════ */
+function toggleJson(btn) {
+  const payload = document.getElementById('jsonPayload');
+  payload.classList.toggle('open');
+  btn.querySelector('span:first-child').textContent = payload.classList.contains('open')
+    ? 'Hide payload ↑' : 'View full payload →';
+}
+
+function copyCode(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function addSuggestion(text) {
+  conversation.push({ role: 'user', content: text });
+  renderChat();
+}
+
+function escAttr(s) {
+  return s.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+}
+
+function getPlainCode(format) {
+  const codes = {
+    inline_text: `// AdMind detected: inline_text\n// Add this below your last AI message bubble:\nif (ad != null && ad['format'] == 'inline_text')\n  InlineTextAdWidget(payload: AdMindPayload.fromJson(ad))`,
+    text_voice_card: `// AdMind detected: text_voice_card\n// Speak the brief first, then show the widget:\nawait yourTTS.speak(ad['serve']['voice_brief']);\nif (ad != null) MultimodalCardWidget(\n  payload: AdMindPayload.fromJson(ad),\n  onDismiss: () => setState(() => _ad = null),\n)`,
+    mcp_transaction_card: `// AdMind detected: mcp_transaction_card\nMCPTransactionCardWidget(\n  payload: AdMindPayload.fromJson(ad),\n  onConfirm: (params) async => await yourMCP.placeOrder(params),\n  onDismiss: () => setState(() => _ad = null),\n)`,
+    post_conv_chip: `// AdMind detected: post_conv_chip\nPostConvChipsWidget(\n  payload: AdMindPayload.fromJson(ad),\n  organicChips: [\n    ChipData(label: 'Sunscreen', icon: 'health'),\n    ChipData(label: 'Kerala clothes', icon: 'clothes'),\n  ],\n)`,
+    predictive_push: `// AdMind detected: predictive_push\nPredictivePushBannerWidget(\n  payload: AdMindPayload.fromJson(ad),\n  onDismiss: () => setState(() => _ad = null),\n)`,
+    mcp_tool_chip: `// AdMind detected: mcp_tool_chip\nMCPToolChipWidget(\n  payload: AdMindPayload.fromJson(ad),\n  onToolCall: (params) async => await yourMCP.callTool(params),\n)`,
+    teaser_hook: `// AdMind detected: teaser_hook\nTeaserAdWidget(\n  payload: AdMindPayload.fromJson(ad),\n  onDismiss: () => setState(() => _ad = null),\n)`
+  };
+  return codes[format] || '';
+}
+
+function syntaxHighlight(json) {
+  return json
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
+      let cls = 'color:#FCD34D;'; // number
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) cls = 'color:#93C5FD;'; // key
+        else cls = 'color:#86EFAC;'; // string
+      } else if (/true|false/.test(match)) cls = 'color:#F9A8D4;';
+      else if (/null/.test(match)) cls = 'color:#9CA3AF;';
+      return `<span style="${cls}">${match}</span>`;
+    });
+}
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════ */
+// Load test 1 by default
+renderChat();
+</script>
+</body>
+</html>

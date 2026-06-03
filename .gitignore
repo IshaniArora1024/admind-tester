@@ -1,0 +1,19 @@
+# Environment
+.env
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.Python
+
+# Logs (keep folder, ignore contents)
+logs/*.jsonl
+
+# IDE
+.vscode/
+.idea/
+
+# Claude Code local settings
+.claude/settings.local.json
