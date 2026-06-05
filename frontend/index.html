@@ -256,6 +256,77 @@
     margin-top: 8px;
   }
 
+  /* ── Tab switcher ── */
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  .tab-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .tab-btn.active {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: #fff;
+  }
+
+  /* ── Direct lookup form ── */
+  .lookup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px 24px;
+  }
+
+  .lookup-form .field-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 5px;
+  }
+
+  .lookup-form select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--navy);
+    background: var(--surface);
+    outline: none;
+    transition: border-color 0.15s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+
+  .lookup-form select:focus { border-color: var(--amber); background-color: #fff; }
+
+  .lookup-hint {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+    padding: 10px 12px;
+    background: #f1f5f9;
+    border-radius: 6px;
+  }
+
   /* ── Right Column ── */
   .right-col {
     display: flex;
@@ -798,17 +869,51 @@
   <!-- ── MIDDLE COLUMN ── -->
   <div class="mid-col">
     <div class="mid-header">
-      <h2 id="midTitle">Inline Text Ad</h2>
-      <div class="hint">Fill in all fields then click Generate Payload</div>
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tabDirect" onclick="switchTab('direct')">Direct Lookup</button>
+        <button class="tab-btn" id="tabBuild" onclick="switchTab('build')">Manual Build</button>
+      </div>
+      <h2 id="midTitle">Direct Lookup</h2>
+      <div class="hint" id="midHint">Pick a campaign and format — get the payload instantly</div>
     </div>
-    <div class="form-scroll">
+
+    <!-- Direct Lookup panel -->
+    <div id="panelDirect" class="lookup-form">
+      <div class="field-group">
+        <label for="l_campaign">Campaign ID</label>
+        <input type="text" id="l_campaign" value="vip_001" placeholder="e.g. vip_001">
+      </div>
+      <div class="field-group">
+        <label for="l_format">Format</label>
+        <select id="l_format">
+          <option value="inline_text">inline_text</option>
+          <option value="teaser_hook">teaser_hook</option>
+          <option value="text_voice_card">text_voice_card</option>
+          <option value="mcp_transaction_card">mcp_transaction_card</option>
+          <option value="post_conv_chip">post_conv_chip</option>
+          <option value="predictive_push">predictive_push</option>
+          <option value="mcp_tool_chip">mcp_tool_chip</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="l_key">Publisher Key</label>
+        <input type="text" id="l_key" value="pub_devname_001" placeholder="e.g. pub_devname_001">
+      </div>
+      <div class="lookup-hint">
+        Calls <code>GET /v1/ad/{campaign_id}/{format}</code> — no conversation or intent matching needed.
+      </div>
+    </div>
+
+    <!-- Manual Build panel (existing) -->
+    <div id="panelBuild" class="form-scroll" style="display:none">
       <div class="form-grid" id="formGrid"></div>
     </div>
+
     <div class="form-footer">
-      <button class="btn-generate" id="btnGenerate" onclick="generatePayload()">
-        Generate Payload →
+      <button class="btn-generate" id="btnGenerate" onclick="handleGenerate()">
+        Get Payload →
       </button>
-      <div class="hint">This calls POST /v1/action on your local API</div>
+      <div class="hint" id="footerHint">GET /v1/ad/{campaign_id}/{format}</div>
     </div>
   </div>
 
@@ -1302,6 +1407,68 @@ function buildFlutter(p) {
   }
 }
 
+// ── Tab switching ─────────────────────────────────────────────────────────────
+let activeTab = 'direct';
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('tabDirect').classList.toggle('active', tab === 'direct');
+  document.getElementById('tabBuild').classList.toggle('active', tab === 'build');
+  document.getElementById('panelDirect').style.display = tab === 'direct' ? 'flex' : 'none';
+  document.getElementById('panelBuild').style.display  = tab === 'build'  ? 'block' : 'none';
+
+  if (tab === 'direct') {
+    document.getElementById('midTitle').textContent  = 'Direct Lookup';
+    document.getElementById('midHint').textContent   = 'Pick a campaign and format — get the payload instantly';
+    document.getElementById('btnGenerate').textContent = 'Get Payload →';
+    document.getElementById('footerHint').textContent  = 'GET /v1/ad/{campaign_id}/{format}';
+  } else {
+    document.getElementById('midTitle').textContent  = (formatsData[selectedFormat] || {}).display_name || selectedFormat;
+    document.getElementById('midHint').textContent   = 'Fill in all fields then click Generate Payload';
+    document.getElementById('btnGenerate').textContent = 'Generate Payload →';
+    document.getElementById('footerHint').textContent  = 'POST /v1/action';
+  }
+}
+
+function handleGenerate() {
+  if (activeTab === 'direct') fetchDirect();
+  else generatePayload();
+}
+
+// ── Direct lookup fetch ───────────────────────────────────────────────────────
+async function fetchDirect() {
+  const campaignId = document.getElementById('l_campaign').value.trim();
+  const format     = document.getElementById('l_format').value;
+  const pubKey     = document.getElementById('l_key').value.trim();
+
+  if (!campaignId || !pubKey) {
+    alert('Campaign ID and Publisher Key are required.');
+    return;
+  }
+
+  const btn = document.getElementById('btnGenerate');
+  btn.disabled = true;
+  btn.textContent = 'Fetching…';
+
+  try {
+    const url = `${API}/v1/ad/${encodeURIComponent(campaignId)}/${encodeURIComponent(format)}?publisher_key=${encodeURIComponent(pubKey)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!res.ok) {
+      showError(res.status, data);
+    } else {
+      lastPayload = data;
+      showResult(data.ad ? data.ad : data);
+    }
+  } catch (err) {
+    showNetworkError(err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Get Payload →';
+  }
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
   checkAPI();
@@ -1330,6 +1497,7 @@ async function init() {
 
   buildFormatList();
   selectFormat('inline_text');
+  switchTab('direct');
 }
 
 init();

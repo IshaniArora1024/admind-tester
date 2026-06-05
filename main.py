@@ -129,6 +129,40 @@ def analyse(request: AnalyseRequest):
     )
 
 
+@app.get("/v1/ad/{campaign_id}/{format}", tags=["Core"])
+def get_ad_direct(campaign_id: str, format: str, publisher_key: str):
+    """
+    Direct ad lookup — no conversation or intent analysis needed.
+    Pass the campaign ID and format, get the payload back immediately.
+
+    Example: GET /v1/ad/vip_001/inline_text?publisher_key=pub_devname_001
+    """
+    if not validate_publisher_key(publisher_key):
+        raise HTTPException(
+            status_code=401,
+            detail={"error": "Invalid publisher key", "code": "ADMIND_001"},
+        )
+
+    campaigns = load_all_campaigns()
+    campaign = next((c for c in campaigns if c.get("campaign_id") == campaign_id), None)
+
+    if campaign is None:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": f"Campaign '{campaign_id}' not found", "code": "ADMIND_003"},
+        )
+
+    format_config = campaign.get("formats", {}).get(format)
+    if format_config is None:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": f"Format '{format}' not found in campaign '{campaign_id}'", "code": "ADMIND_004"},
+        )
+
+    payload = build_payload(campaign, format, {}, None)
+    return AdPayloadResponse(ad=payload, format=format, triggered_by=None, session_id=None)
+
+
 @app.post("/v1/impression", tags=["Tracking"])
 def log_impression(request: ImpressionRequest):
     """Log that an ad was shown to a user."""
