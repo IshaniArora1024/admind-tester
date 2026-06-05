@@ -1451,8 +1451,11 @@ async function fetchDirect() {
   btn.textContent = 'Fetching…';
 
   try {
-    const url = `${API}/v1/ad/${encodeURIComponent(campaignId)}/${encodeURIComponent(format)}?publisher_key=${encodeURIComponent(pubKey)}`;
-    const res = await fetch(url);
+    const res = await fetch(`${API}/v1/ad`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ campaign_id: campaignId, format, publisher_key: pubKey }),
+    });
     const data = await res.json();
 
     if (!res.ok) {
