@@ -1126,40 +1126,119 @@ function buildForm(fmt) {
   });
 }
 
-// ── Generate payload ──────────────────────────────────────────────────────────
-async function generatePayload() {
-  const btn = document.getElementById('btnGenerate');
-  btn.disabled = true;
-  btn.textContent = 'Generating…';
-
+// ── Generate payload (client-side, no API call needed) ───────────────────────
+function generatePayload() {
   const fields = (formatsData[selectedFormat] || {}).required_fields || [];
-  const inputs = {};
+  const v = {};
   fields.forEach(f => {
     const el = document.getElementById(`f_${f.key}`);
-    inputs[f.key] = el ? el.value : '';
+    v[f.key] = el ? el.value.trim() : '';
   });
 
-  try {
-    const res = await fetch(`${API}/v1/action`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ format: selectedFormat, inputs }),
-    });
+  const ts = new Date().toISOString().replace(/\D/g,'').slice(0,20);
+  const adId = `manual_${selectedFormat}_${ts}`;
+  const fmt = selectedFormat;
 
-    const data = await res.json();
+  let serve = {};
+  let action = null;
+  let guard = {};
 
-    if (!res.ok) {
-      showError(res.status, data);
-    } else {
-      lastPayload = data;
-      showResult(data);
-    }
-  } catch (err) {
-    showNetworkError(err);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Generate Payload →';
+  switch (fmt) {
+    case 'inline_text':
+      serve = { text: v.ad_text, cta_label: v.cta_label, cta_url: v.cta_url };
+      guard = { label: v.sponsored_label || 'Sponsored' };
+      break;
+
+    case 'text_voice_card':
+      serve = {
+        voice_brief: v.voice_brief,
+        put_forth: splitCSV(v.put_forth),
+        at_no_time: splitCSV(v.at_no_time),
+        sponsored_label: v.sponsored_label,
+        card: {
+          title: v.card_title, subtitle: v.card_subtitle,
+          delivery_line: v.delivery_line,
+          cta_primary_label: v.cta_primary_label, cta_primary_url: v.cta_primary_url,
+          cta_secondary_label: v.cta_secondary_label,
+        },
+      };
+      guard = { frequency_cap_session: 1 };
+      break;
+
+    case 'mcp_transaction_card':
+      serve = {
+        voice_brief: v.voice_brief,
+        put_forth: splitCSV(v.put_forth),
+        at_no_time: splitCSV(v.at_no_time),
+        card: {
+          title: v.card_title, variant: v.card_variant,
+          price: v.card_price, delivery_label: v.delivery_label,
+          cta_label: v.cta_label,
+        },
+      };
+      action = {
+        advertiser_mcp: v.mcp_endpoint, mcp_tool: v.mcp_tool,
+        mcp_params: { product_sku: v.product_sku, quantity: parseInt(v.quantity) || 1 },
+      };
+      guard = { frequency_cap_session: 1, latency_sla_ms: parseInt(v.latency_sla_ms) || 800 };
+      break;
+
+    case 'post_conv_chip':
+      serve = {
+        section_label: v.section_label,
+        sponsored_chip: {
+          label: v.chip_label, icon: v.chip_icon,
+          cta_url: v.cta_url, slot_position: parseInt(v.slot_position) || 0,
+        },
+      };
+      guard = { frequency_cap_session: 1 };
+      break;
+
+    case 'predictive_push':
+      serve = {
+        title: v.title, body: v.body,
+        cta_label: v.cta_label, cta_url: v.cta_url,
+        deadline_label: v.deadline_label,
+      };
+      guard = { frequency_cap_per_trip: 1 };
+      break;
+
+    case 'mcp_tool_chip':
+      serve = { chip_label: v.chip_label, chip_icon: v.chip_icon };
+      action = {
+        advertiser_mcp: v.mcp_endpoint, mcp_tool: v.mcp_tool,
+        mcp_params_from_context: splitCSV(v.context_params),
+      };
+      guard = { frequency_cap_session: 2 };
+      break;
+
+    case 'teaser_hook':
+      serve = {
+        teaser_question: v.teaser_question,
+        quick_replies: splitCSV(v.quick_replies),
+        on_positive_response: 'skip_ad',
+      };
+      guard = { frequency_cap_session: 1, skip_if_positive: true };
+      break;
   }
+
+  const payload = {
+    ad_id: adId,
+    format: fmt,
+    serve,
+    guard,
+    meta: {
+      advertiser: v.app_name || '',
+      triggered_by: 'manual',
+      confidence: 1.0,
+      method: 'manual',
+      trip_details: {},
+    },
+    ...(action ? { action } : {}),
+  };
+
+  lastPayload = payload;
+  showResult(payload);
 }
 
 // ── Show result ───────────────────────────────────────────────────────────────
