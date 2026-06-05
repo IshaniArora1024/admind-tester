@@ -42,6 +42,12 @@ class ClickRequest(BaseModel):
     timestamp: Optional[str] = None
 
 
+class DirectAdRequest(BaseModel):
+    campaign_id: str
+    format: str
+    publisher_key: str
+
+
 class ErrorResponse(BaseModel):
     error: str
     code: str

@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from campaign_matcher import load_all_campaigns, match_campaign
 from config import ADMIND_MASTER_KEY, CLICKS_PATH, IMPRESSIONS_PATH, LOG_CLICKS, LOG_IMPRESSIONS
 from intent_engine import detect_intent
-from models import AdPayloadResponse, AnalyseRequest, ClickRequest, ImpressionRequest
+from models import AdPayloadResponse, AnalyseRequest, ClickRequest, DirectAdRequest, ImpressionRequest
 from payload_builder import build_payload
 
 app = FastAPI(
@@ -129,38 +129,45 @@ def analyse(request: AnalyseRequest):
     )
 
 
-@app.get("/v1/ad/{campaign_id}/{format}", tags=["Core"])
-def get_ad_direct(campaign_id: str, format: str, publisher_key: str):
+@app.post("/v1/ad", tags=["Core"])
+def get_ad_direct(request: DirectAdRequest):
     """
     Direct ad lookup — no conversation or intent analysis needed.
-    Pass the campaign ID and format, get the payload back immediately.
+    Send campaign_id + format in the body, get the payload back.
 
-    Example: GET /v1/ad/vip_001/inline_text?publisher_key=pub_devname_001
+    Example request body:
+    ```json
+    {
+      "campaign_id": "vip_001",
+      "format": "inline_text",
+      "publisher_key": "pub_devname_001"
+    }
+    ```
     """
-    if not validate_publisher_key(publisher_key):
+    if not validate_publisher_key(request.publisher_key):
         raise HTTPException(
             status_code=401,
             detail={"error": "Invalid publisher key", "code": "ADMIND_001"},
         )
 
     campaigns = load_all_campaigns()
-    campaign = next((c for c in campaigns if c.get("campaign_id") == campaign_id), None)
+    campaign = next((c for c in campaigns if c.get("campaign_id") == request.campaign_id), None)
 
     if campaign is None:
         raise HTTPException(
             status_code=404,
-            detail={"error": f"Campaign '{campaign_id}' not found", "code": "ADMIND_003"},
+            detail={"error": f"Campaign '{request.campaign_id}' not found", "code": "ADMIND_003"},
         )
 
-    format_config = campaign.get("formats", {}).get(format)
+    format_config = campaign.get("formats", {}).get(request.format)
     if format_config is None:
         raise HTTPException(
             status_code=404,
-            detail={"error": f"Format '{format}' not found in campaign '{campaign_id}'", "code": "ADMIND_004"},
+            detail={"error": f"Format '{request.format}' not found in campaign '{request.campaign_id}'", "code": "ADMIND_004"},
         )
 
-    payload = build_payload(campaign, format, {}, None)
-    return AdPayloadResponse(ad=payload, format=format, triggered_by=None, session_id=None)
+    payload = build_payload(campaign, request.format, {}, None)
+    return AdPayloadResponse(ad=payload, format=request.format, triggered_by=None, session_id=None)
 
 
 @app.post("/v1/impression", tags=["Tracking"])
